@@ -1,0 +1,129 @@
+// -- Color Variables
+$uw-red:                    #c5050c;
+$uw-red-dark:               #9b0000;
+$uw-page-bg:                #f7f7f7;
+$uw-gray-blue:              #dadfe1;
+$uw-gray-darker:            #646569;
+$uw-gray-darkest:           #282728;
+$uw-body-font:              #494949;
+$uw-anchor-color:           #0479a8;
+$uw-gray-footer-text:       #adadad;
+$uw-gray-footer-text-hover: #f9f9f9;
+
+$body-background: $uw-page-bg;
+$header-background: $uw-red;
+$main-area-background: white;
+$footer-background: $uw-gray-darkest;
+
+// -- Begin Styling
+
+body {
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    min-height: 100vh; // Take a minimum of the full height of the screen
+    font-size: 10pt;
+    font-family: "Times New Roman", "Arial", "Trebuchet MS";
+
+    background-color: $body-background;
+
+    // Create the 3 columns such that the middle column will
+    // only grow wider or smaller up to certain points
+    display: grid;
+    grid-template-columns: auto minmax(20rem, 70rem) auto;
+    grid-template-rows: auto
+                        0px;
+
+    button {
+        border-radius: 0px;
+        border: 0px solid;
+
+        font-family: inherit;
+    }
+}
+
+#left-col {
+    height: 100%;
+}
+
+#middle-col {
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns:   100%;
+    grid-template-rows: 4rem 
+                        auto
+                        4rem;
+
+    header {
+        background-color: $header-background;
+
+        nav {
+            font-size: 1.4rem;
+
+            button {
+                float: left;
+                font-size: inherit;
+                background-color: $uw-red;
+                color: white;
+                text-align: center;
+                padding: 1.17rem 1.6rem;
+
+                text-decoration: none;
+
+                &:hover {
+                    color: black;
+                    background-color: white;
+                }
+            }
+        }
+    }
+
+    main {
+        background-color: $main-area-background;
+    }
+
+    footer {
+        background-color: $footer-background;
+    }
+}
+
+#right-col {
+    height: 100%;
+}
+
+
+// When the raytracer is on the screen, this id will be set
+#raytracer-main {
+    font-size: 1.2rem;
+    padding: 2rem 2rem;
+
+    canvas {
+        border: 1px solid black;
+        margin: 1rem;
+        padding: 0px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .canvas-area {
+        padding: 0px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

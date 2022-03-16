@@ -1,0 +1,93 @@
+body {
+  position: absolute;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  min-height: 100vh;
+  font-size: 10pt;
+  font-family: "Times New Roman", "Arial", "Trebuchet MS";
+  background-color: #f7f7f7;
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: auto minmax(20rem, 70rem) auto;
+      grid-template-columns: auto minmax(20rem, 70rem) auto;
+  -ms-grid-rows: auto 0px;
+      grid-template-rows: auto 0px;
+}
+
+body button {
+  border-radius: 0px;
+  border: 0px solid;
+  font-family: inherit;
+}
+
+#left-col {
+  height: 100%;
+}
+
+#middle-col {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 100%;
+      grid-template-columns: 100%;
+  -ms-grid-rows: 4rem  auto 4rem;
+      grid-template-rows: 4rem  auto 4rem;
+}
+
+#middle-col header {
+  background-color: #c5050c;
+}
+
+#middle-col header nav {
+  font-size: 1.4rem;
+}
+
+#middle-col header nav button {
+  float: left;
+  font-size: inherit;
+  background-color: #c5050c;
+  color: white;
+  text-align: center;
+  padding: 1.17rem 1.6rem;
+  text-decoration: none;
+}
+
+#middle-col header nav button:hover {
+  color: black;
+  background-color: white;
+}
+
+#middle-col main {
+  background-color: white;
+}
+
+#middle-col footer {
+  background-color: #282728;
+}
+
+#right-col {
+  height: 100%;
+}
+
+#raytracer-main {
+  font-size: 1.2rem;
+  padding: 2rem 2rem;
+}
+
+#raytracer-main canvas {
+  border: 1px solid black;
+  margin: 1rem;
+  padding: 0px;
+}
+
+#raytracer-main .center {
+  text-align: center;
+}
+
+#raytracer-main .canvas-area {
+  padding: 0px;
+}
+/*# sourceMappingURL=index.css.map */

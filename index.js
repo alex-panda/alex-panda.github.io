@@ -73,6 +73,7 @@ function renderPage(destination) {
 
 // --- Declare navigation buttons
 navBtn("#raytracer1-nav", "raytracer1");
+navBtn("#raytracer2-nav", "raytracer2");
 
 // --- Render Home Page
 renderPage("home");

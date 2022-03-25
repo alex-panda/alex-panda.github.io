@@ -21,6 +21,10 @@ class Vec3 {
     get b() { return this.z; }
     set b(newB) { this.z = newB; }
 
+    random(min=0.0, max=1.0) {
+        return new Vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
+    }
+
     copy() {
         return new Vec3(this.x, this.y, this.z);
     }
@@ -259,7 +263,7 @@ class Camera {
  * 
  * If neither min nor max are specified, the range is assumed to be [0, 1)
  */
-function randomDouble(min, max) {
+function randomDouble(min=0.0, max=0.1) {
     return (min + ((max - min) * Math.random()));
 }
 
@@ -272,13 +276,47 @@ function clamp(x, min, max) {
     return x;
 }
 
+function randomInUnitSphere() {
+    while (true) {
+        let p = Vec3.prototype.random(-1.0, 1.0);
+        if (p.lengthSquared() >= 1.0) continue;
+        return p;
+    } 
+}
+
+function randomUnitVector() {
+    return randomInUnitSphere().unitVector();
+}
+
+function randomInHemisphere(normal) {
+    let inUnitSphere = randomInUnitSphere();
+    if (inUnitSphere.dot(normal) > 0.0) { // In the same hemisphure as the normal
+        return inUnitSphere;
+    } else {
+        return inUnitSphere.negative();
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Render
 
-function rayColor(ray, world) {
+function rayColor(ray, world, depth) {
     let hitRecord = new HitRecord();
-    if (world.hitBy(ray, 0, INFINITY, hitRecord)) {
-        return ((hitRecord.normal.plus(WHITE)).timesNum(0.5));
+
+    if (depth <= 0) {
+        return new Color(0.0, 0.0, 0.0);
+    }
+
+    if (world.hitBy(ray, 0.001, INFINITY, hitRecord)) {
+        // Use this line for more accurate, newer Lambertian Reflection
+        let target = hitRecord.p.plus(hitRecord.normal).plusEq(randomUnitVector());
+
+        // Use this line less accurate, but more intuitive way of calculating reflection
+        //  the difference between this method of calculating reflection and the
+        //  one from the line above is slight but visible in complex scenes
+        //let target = hitRecord.p.plus(randomInHemisphere(hitRecord.normal));
+
+        return rayColor(new Ray(hitRecord.p, target.minus(hitRecord.p)), world, depth - 1).timesNum(0.5);
     }
 
     // Background
@@ -302,6 +340,7 @@ function main(canvasId, renderPattern) {
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = IMAGE_WIDTH / ASPECT_RATIO;
     const SAMPLES_PER_PIXEL = 100;
+    const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
 
@@ -328,18 +367,20 @@ function main(canvasId, renderPattern) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
             let r = camera.getRay(u, v);
-            pixelColor.plusEq(rayColor(r, world));
+            pixelColor.plusEq(rayColor(r, world, MAX_DEPTH));
         }
 
         // Figure out value of the antialiased pixel
         let [r, g, b] = [pixelColor.r, pixelColor.g, pixelColor.b];
 
+        // Divide the color by the number of samples and gamma-correct for
+        // gamma=2.0
         const scale = 1.0 / SAMPLES_PER_PIXEL;
-        r *= scale;
-        g *= scale;
-        b *= scale;
+        r = Math.sqrt(r * scale);
+        g = Math.sqrt(g * scale);
+        b = Math.sqrt(b * scale);
 
-        writePixel(x, y, 256 * clamp(r, 0.0, 0.999), 256 * clamp(g, 0.0, 0.999), 256 * clamp(b, 0.0, 0.999));
+        writePixel(x, y, 256 * clamp(r, 0.0, 1.0), 256 * clamp(g, 0.0, 1.0), 256 * clamp(b, 0.0, 1.0));
     }
 
     let renderPatternGens;

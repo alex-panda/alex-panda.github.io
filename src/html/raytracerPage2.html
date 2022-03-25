@@ -1,0 +1,28 @@
+{% extends "./base.html" %}
+
+{% block js_head %}
+<script type="module" src="raytracer2.js" defer></script>
+{% endblock %}
+
+{% block main %}
+<div id="raytracer-main">
+    <p>
+        After following the next 6 chapters of "Ray Tracing in One Weekend" by Peter
+        Shirley and thus finishing the book.
+    </p>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas"></canvas>
+    </div>
+
+    <ul>
+        <li>My Goals</li>
+        <ul>
+            
+        </ul>
+        <li>My Results</li>
+        <li>My Work</li>
+        <li>What I Learned</li>
+    </ul>
+</div>
+{% endblock %}

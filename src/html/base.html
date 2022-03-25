@@ -5,17 +5,15 @@
         <meta name="author" content="Alexander Peseckis">
         <meta name="description" content="Alexander Peseckis' Personal Website">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="keywords" content=" HTML, CSS, JavaScript ">
+        <meta name="keywords" content="{% block keywords %} HTML, CSS, JavaScript {% endblock %}">
 
-        
+        {% block css_head %}
         <link rel="stylesheet" type="text/css" href="index.css" />
-        
+        {% endblock %}
 
         <script type="module" src="index.js" defer></script>
 
-        
-<script type="module" src="raytracer2.js" defer></script>
-
+        {% block js_head %}{% endblock %}
     </head>
 
     <body>
@@ -25,36 +23,15 @@
         <div id="middle-col">
             <header>
                 <nav>
-                    
+                    {% block nav %}
                     <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
                     <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
-                    
+                    {% endblock %}
                 </nav>
             </header>
 
             <main>
-                
-<div id="raytracer-main">
-    <p>
-        After following the next 6 chapters of "Ray Tracing in One Weekend" by Peter
-        Shirley and thus finishing the book.
-    </p>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas"></canvas>
-    </div>
-
-    <ul>
-        <li>My Goals</li>
-        <ul>
-            
-        </ul>
-        <li>My Results</li>
-        <li>My Work</li>
-        <li>What I Learned</li>
-    </ul>
-</div>
-
+                {% block main %}{% endblock %}
             </main>
 
             <footer>

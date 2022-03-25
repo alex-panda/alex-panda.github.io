@@ -1,4 +1,10 @@
 // ----------------------------------------------------------------------------
+// Constants
+
+const INFINITY = Infinity;
+const PI = 3.1415926535897932385;
+
+// ----------------------------------------------------------------------------
 // Helper Classes
 
 class Vec3 {
@@ -61,10 +67,6 @@ class Vec3 {
 
     toString() {
         return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
-    }
-
-    toColorString() {
-        return `rgb(${Math.floor(255.99 * this.r)}, ${Math.floor(255.99 * this.g)}, ${Math.floor(255.99 * this.b)})`
     }
 
     plus(vec3) {
@@ -131,7 +133,7 @@ const BLACK = new Color(0.0, 0.0, 0.0);
  * A class that represents a ray of light.
  */
 class Ray {
-    constructor({origin, direction}) {
+    constructor(origin, direction) {
         this.origin = origin;
         this.direction = direction;
     }
@@ -228,11 +230,47 @@ class HittableList {
     }
 }
 
-// ----------------------------------------------------------------------------
-// Constants
+class Camera {
+    constructor() {
+        this.aspectRatio = 16.0 / 9.0;
+        this.viewportHeight = 2.0;
+        this.viewportWidth = this.aspectRatio * this.viewportHeight;
+        this.focalLength = 1.0;
 
-const INFINITY = Infinity;
-const PI = 3.1415926535897932385;
+        this.origin = new Vec3(0.0, 0.0, 0.0);
+        this.horizontal = new Vec3(this.viewportWidth, 0.0, 0.0);
+        this.vertical = new Vec3(0.0, this.viewportHeight, 0.0);
+        this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2.0)).minus(this.vertical.divByNum(2.0)).minus(new Vec3(0, 0, this.focalLength));
+    }
+
+    getRay(u, v) {
+        return new Ray(
+            this.origin,
+            this.lowerLeftCorner.plus(this.horizontal.timesNum(u)).plus(this.vertical.timesNum(v))
+        );
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Helper Functions
+
+/**
+ * Returns a random decimal value number in [min, max)
+ * 
+ * If neither min nor max are specified, the range is assumed to be [0, 1)
+ */
+function randomDouble(min, max) {
+    return (min + ((max - min) * Math.random()));
+}
+
+/**
+ * Clamps the value x in the range [min, max]
+ */
+function clamp(x, min, max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
+}
 
 // ----------------------------------------------------------------------------
 // Render
@@ -256,27 +294,21 @@ function rayColor(ray, world) {
  * Uses async so that the rendering is non-blocking and thus the internet
  * browser will not seize up.
  */
-async function main(canvas) {
-    if (canvas === undefined || canvas === null) {
-        return;
-    }
+function main(canvasId, renderPattern) {
+    if (canvasId === undefined) { return; }
 
-    const context = canvas.getContext('2d');
-
-    // Helper Function that writes a pixel to the context
-    function writePixel(imageX, imageY, color) {
-        context.fillStyle = color;
-        context.fillRect(imageX, imageY, 1, 1); // draw the pixel
-    }
-
-    // Image
+    // Image Dimensions
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = IMAGE_WIDTH / ASPECT_RATIO;
+    const SAMPLES_PER_PIXEL = 100;
 
-    // Make sure that the canvas is the correct width and height
-    canvas.width = IMAGE_WIDTH;
-    canvas.height = IMAGE_HEIGHT;
+    const newlyRenderedPixels = [];
+
+    // Helper Function that writes a pixel to the context
+    function writePixel(imageX, imageY, r, g, b) {
+        newlyRenderedPixels.push([imageX, imageY, [r, g, b]]);
+    }
 
     // World
     let world = new HittableList();
@@ -284,58 +316,97 @@ async function main(canvas) {
     world.hittables.push(new Sphere({center:new Point3D(0, -100.5, -1), radius:100}));
 
     // Camera
-    const viewportHeight = 2.0;
-    const viewportWidth = 2.0 * viewportHeight;
-    const focalLength = 1.0;
-
-    const origin = new Point3D(0.0, 0.0, 0.0);
-    const horizontal = new Vec3(viewportWidth, 0.0, 0.0);
-    const vertical = new Vec3(0.0, viewportHeight, 0.0);
-    const lowerLeftCorner = origin.minus(horizontal.divByNum(2.0)).minus(vertical.divByNum(2.0)).minus(new Vec3(0, 0, focalLength));
+    const camera = new Camera();
 
     // --- Render
 
-    // Clear the canvas
-    context.save();
-    context.fillStyle = "white";
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.restore();
+    function renderPixel(x, y) {
+        let pixelColor = new Color(0, 0, 0);
+
+        // Take a bunch of samples around the pixel to do antialiasing
+        for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
+            let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
+            let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
+            let r = camera.getRay(u, v);
+            pixelColor.plusEq(rayColor(r, world));
+        }
+
+        // Figure out value of the antialiased pixel
+        let [r, g, b] = [pixelColor.r, pixelColor.g, pixelColor.b];
+
+        const scale = 1.0 / SAMPLES_PER_PIXEL;
+        r *= scale;
+        g *= scale;
+        b *= scale;
+
+        writePixel(x, y, 256 * clamp(r, 0.0, 0.999), 256 * clamp(g, 0.0, 0.999), 256 * clamp(b, 0.0, 0.999));
+    }
+
+    let renderPatternGens;
+    if (false) {
+    } else {
+        renderPatternGens = function () {
+
+            let renderBox = function* (top, left, bottom, right) {
+                for (let x = left; x <= right; x++) {
+                    for (let y = top; y <= bottom; y++) {
+                        yield;
+                        renderPixel(x, y);
+                    }
+                }
+                return;
+            }
+
+            // Initialize the render generators
+            const renderGens = [];
+            // Box is rendered inclusive so the pixels on the edges are all rendered
+            renderGens.push(renderBox(0, 0, IMAGE_HEIGHT, IMAGE_WIDTH));
+            return renderGens;
+        }
+    }
+
+    const renderGens = renderPatternGens();
 
     /**
-     * Renders a row of pixels of the picture.
+     *  Posts the message so that the JavaScript file that called this Worker
+     *  can show the updated image to the user.
      */
-    async function rowColors(y) {
-        y = y + 1;
-        let colors = [];
-        for (let x = 0; x < IMAGE_WIDTH; ++x) {
-            let u = x / (IMAGE_WIDTH - 1);
-            let v = y / (IMAGE_HEIGHT - 1);
-            let ray = new Ray({
-                origin:origin,
-                direction:lowerLeftCorner.plus(horizontal.timesNum(u)).plus(vertical.timesNum(v))
-            });
-            let raycolor = rayColor(ray, world).toColorString();
+    function drawImage() {
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels]);
+        newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
+    }
 
-            // Have to do IMAGE_HEIGHT - y because raytracer assumes that
-            // positive y goes upward, but on canvas it goes downward
-            writePixel(x, IMAGE_HEIGHT - y, raycolor);
+    // Render the image
+    let moreToRender = true;
+    let renderCnt = 0;
+    while (moreToRender) {
+        moreToRender = false;
+
+        // Render Next Batch of Pixels
+        let i = 0;
+        while (i < renderGens.length) {
+            if (renderGens[i].next().done) {
+                renderGens.splice(i, 1);
+                continue;
+            } else {
+                moreToRender = true;
+            }
+
+            i++;
         }
-        return colors;
-    }
 
-    let rows = [];
-    // Use async to calculate each row
-    for (let y = IMAGE_HEIGHT - 1; y >= 0; --y) {
-        rows.push(rowColors(y));
+        // Show the updated image to the user after so many batches have been
+        // rendered
+        renderCnt -= 1;
+        if (renderCnt < 0) {
+            drawImage();
+            renderCnt = 10;
+        }
     }
-
-    // Make this function wait asyncronously for every pixel to be drawn before ending
-    await Promise.all(rows);
+    drawImage(); // make sure final image is drawn
 }
 
-main(document.querySelector("#raytracer-out-canvas"));
-
-export {main};
+main("#raytracer-out-canvas", "box-left-right");
 
 
 

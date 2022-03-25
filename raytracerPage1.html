@@ -1,112 +1,143 @@
-import {main as raytracerPage1Main} from "./raytracer1.js";
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="author" content="Alexander Peseckis">
+        <meta name="description" content="Alexander Peseckis' Personal Website">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="keywords" content=" HTML, CSS, JavaScript ">
 
-// Functions that actually render the JS
-export function raytracerPage1() {
-    let html = `
-        <div id="raytracer-main">
-            <p>
-                After following the first 6 chapters of "Ray Tracing in One Weekend" by Peter
-                Shirley, I have created a small raytracer capable of rendering spheres in
-                various positions and differing colors. Below, you can see two spheres: one
-                extremely large one colored green and another much smaller one colored
-                based on its surface norms.
-            </p>
+        
+        <link rel="stylesheet" type="text/css" href="index.css" />
+        
 
-            <div class="canvas-area center">
-                <canvas id="raytracer-out-canvas"></canvas>
-            </div>
+        <script type="module" src="index.js" defer></script>
 
-            <p>
-                Both of the above spheres (with a blue to white gradient
-                background) were rendered in real time starting from the moment
-                you opened this page of the website.
-            </p>
+        
+<script type="module" src="raytracer1.js" defer></script>
 
-            <p>Here is a small writup on what it took me to get to this point:</p>
+    </head>
+
+    <body>
+        <div id="left-col">
+        </div>
+
+        <div id="middle-col">
+            <header>
+                <nav>
+                    
+                    <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
+                    <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
+                    
+                </nav>
+            </header>
+
+            <main>
+                
+<div id="raytracer-main">
+    <p>
+        After following the first 6 chapters of "Ray Tracing in One Weekend" by Peter
+        Shirley, I have created a small raytracer capable of rendering spheres in
+        various positions and differing colors. Below, you can see two spheres: one
+        extremely large one colored green and another much smaller one colored
+        based on its surface norms.
+    </p>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas"></canvas>
+    </div>
+
+    <p>
+        Both of the above spheres (with a blue to white gradient
+        background) were rendered in real time starting from the moment
+        you opened this page of the website.
+    </p>
+
+    <p>Here is a small writup on what it took me to get to this point:</p>
+    <ul>
+        <li>My Goals</li>
             <ul>
-                <li>My Goals</li>
+                <li>Create a website on GitHub Pages.</li>
+                <li>Learn JavaScript enough that I can begin coding the raytracer in JavaScript.</li>
+                <li>Follow the first 6 chapters of "Ray Tracing in 1 Weekend," coding the basic setup for the ray tracer.</li>
+            </ul>
+        <li>My Results</li>
+            <ul>
+                <li>I created a flatpage website that will work on
+                GitHub Pages.</li>
+
+                <li>I learned JavaScript enough to be able to begin
+                coding the ray tracer in the programming language.</li>
+
+                <li>I followed the first 6 chapters of "Ray Tracing in 1 Weekend" and set up the
+                ray tracer so that it has the basic building blocks and can raytrace simple images.
+                Namely, I set up:</li>
                     <ul>
-                        <li>Create a website on GitHub Pages.</li>
-                        <li>Learn JavaScript enough that I can begin coding the raytracer in JavaScript.</li>
-                        <li>Follow the first 6 chapters of "Ray Tracing in 1 Weekend," coding the basic setup for the ray tracer.</li>
-                    </ul>
-                <li>My Results</li>
-                    <ul>
-                        <li>I created a flatpage website that will work on
-                        GitHub Pages.</li>
-
-                        <li>I learned JavaScript enough to be able to begin
-                        coding the ray tracer in the programming language.</li>
-
-                        <li>I followed the first 6 chapters of "Ray Tracing in 1 Weekend" and set up the
-                        ray tracer so that it has the basic building blocks and can raytrace simple images.
-                        Namely, I set up:</li>
-                            <ul>
-                                <li>a vector class for doing calculations in a 3D space by using 3D points and for representing RGB colors</li>
-                                <li>a camera for looking into the world</li>
-                                <li>an abstract base class for hittable objects so that eventually more than one shape can be put in the ray tracer's world and thus seen in it</li>
-                                <li>a hittable sphere class for representing spheres in the world that can be hit by light rays and thus looked at by the ray tracer</li>
-                                <li>a hittable list so that the ray tracer can handle having multiple objects in the world</li>
-                                <li>a main function that ray traces the image produced by the current world and camera and outputs the result to an HTML canvas for user viewership</li>
-                            </ul>
-                    </ul>
-                <li>My Work</li>
-                    <ul>
-                        <li>I spent multiple weeks learning JavaScript/HTML/CSS.</li>
-                        <li>I spent multiple days trying to build my GitHub Pages website using Python flask as an HTML generator. That did not work out, so now I am using a bunch of flat HTML pages without a generator.</li>
-                        <li>It took me multiple days to go through the first 6 chapters of "Ray Tracing in One Weekend," write the code for the ray tracer, and debug the issues my code had.</li>
-                    </ul>
-                <li>What I Learned</li>
-                    <ul>
-
-                    <li>HTML</li>
-                        <ul>
-                            <li>the DOM</li>
-                            <li>how HTML documents are generally formatted</li>
-                            <li>what HTML elements exist</li>
-                            <li>how HTML elements interact with one another</li>
-                        </ul>
-
-                    <li>CSS</li>
-                        <ul>
-                            <li>general layout</li>
-                            <li>selecting classes vs tags vs ids</li>
-                            <li>the styling available for each HTML element</li>
-                            <li>how to position elements using CSS</li>
-                            <li>CSS Grid</li>
-                        </ul>
-
-                    <li>JavaScript (while I have learned other programming languages before, I had to learn how many things look/work in JavaScript in particular)</li>
-                        <ul>
-                        <li>classes</li>
-                        <li>functions</li>
-                        <li>loops</li>
-                        <li>conditionals</li>
-                        <li>variables/variable scopes</li>
-                        <li>asyncronous programming</li>
-                        <li>event handling</li>
-                        <li>how to access/manipulate HTML elements and the DOM</li>
-                        <li>and more</li>
-                        </ul>
-
-                    <li>How to set up a ray tracer.</li>
-                        <ul>
-                            <li>How colors work on the computer.</li>
-                            <li>How to trace a ray and see what it hits in a 3D space.</li>
-                            <li>How to create objects that can be hit by a ray.</li>
-                            <li>How to handle having multiple objects in the ray tracer's world.</li>
-                            <li>How to color a pixel based on what a ray from the pixel into the world hit.</li>
-                            <li>How to differentiate hitting the frontside or backside of an object with a ray.</li>
-                        </ul>
-
+                        <li>a vector class for doing calculations in a 3D space by using 3D points and for representing RGB colors</li>
+                        <li>a camera for looking into the world</li>
+                        <li>an abstract base class for hittable objects so that eventually more than one shape can be put in the ray tracer's world and thus seen in it</li>
+                        <li>a hittable sphere class for representing spheres in the world that can be hit by light rays and thus looked at by the ray tracer</li>
+                        <li>a hittable list so that the ray tracer can handle having multiple objects in the world</li>
+                        <li>a main function that ray traces the image produced by the current world and camera and outputs the result to an HTML canvas for user viewership</li>
                     </ul>
             </ul>
+        <li>My Work</li>
+            <ul>
+                <li>I spent multiple weeks learning JavaScript/HTML/CSS.</li>
+                <li>I spent multiple days trying to build my GitHub Pages website using Python flask as an HTML generator. That did not work out, so now I am using a bunch of flat HTML pages without a generator.</li>
+                <li>It took me multiple days to go through the first 6 chapters of "Ray Tracing in One Weekend," write the code for the ray tracer, and debug the issues my code had.</li>
+            </ul>
+        <li>What I Learned</li>
+            <ul>
 
-            <p>
-                Below is the source code for the raytracer that rendered the above image:
-            </p>
+            <li>HTML</li>
+                <ul>
+                    <li>the DOM</li>
+                    <li>how HTML documents are generally formatted</li>
+                    <li>what HTML elements exist</li>
+                    <li>how HTML elements interact with one another</li>
+                </ul>
 
-            <code><pre>
+            <li>CSS</li>
+                <ul>
+                    <li>general layout</li>
+                    <li>selecting classes vs tags vs ids</li>
+                    <li>the styling available for each HTML element</li>
+                    <li>how to position elements using CSS</li>
+                    <li>CSS Grid</li>
+                </ul>
+
+            <li>JavaScript (while I have learned other programming languages before, I had to learn how many things look/work in JavaScript in particular)</li>
+                <ul>
+                <li>classes</li>
+                <li>functions</li>
+                <li>loops</li>
+                <li>conditionals</li>
+                <li>variables/variable scopes</li>
+                <li>asyncronous programming</li>
+                <li>event handling</li>
+                <li>how to access/manipulate HTML elements and the DOM</li>
+                <li>and more</li>
+                </ul>
+
+            <li>How to set up a ray tracer.</li>
+                <ul>
+                    <li>How colors work on the computer.</li>
+                    <li>How to trace a ray and see what it hits in a 3D space.</li>
+                    <li>How to create objects that can be hit by a ray.</li>
+                    <li>How to handle having multiple objects in the ray tracer's world.</li>
+                    <li>How to color a pixel based on what a ray from the pixel into the world hit.</li>
+                    <li>How to differentiate hitting the frontside or backside of an object with a ray.</li>
+                </ul>
+
+            </ul>
+    </ul>
+
+    <p>
+        Below is the source code for the raytracer that rendered the above image:
+    </p>
+
+    <code><pre>
 // ----------------------------------------------------------------------------
 // Helper Classes
 
@@ -448,18 +479,17 @@ async function main(canvas) {
     // Make this function wait asyncronously for every pixel to be drawn before ending
     await Promise.all(rows);
 }
-            </pre></code>
+    </pre></code>
 
+</div>
+
+            </main>
+
+            <footer>
+            </footer>
         </div>
-    `;
 
-    let css_filenames = [];
-    let js_filenames = [];
-    let callbacks = [
-        () => {
-            const canvas = document.getElementById("raytracer-out-canvas");
-            raytracerPage1Main(canvas);
-        }
-    ];
-    return [html, css_filenames, js_filenames, callbacks];
-}
+        <div id="right-col">
+        </div>
+    </body>
+</html>

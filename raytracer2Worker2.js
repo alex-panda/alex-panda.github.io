@@ -21,6 +21,12 @@ class Vec3 {
     get b() { return this.z; }
     set b(newB) { this.z = newB; }
 
+    nearZero() {
+        // Return true if the vector is close to zero in all dimensions
+        const s = 1 * Math.pow(10, -8);
+        return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
+    }
+
     random(min=0.0, max=1.0) {
         return new Vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
     }
@@ -151,10 +157,11 @@ class Ray {
 }
 
 class HitRecord {
-    constructor({}={}) {
-        this.p = new Point3D(0, 0, 0);                 // Point3D
-        this.normal = new Vec3(0, 0, 0);       // Vec3
-        this.t = 0;                 // Number
+    constructor() {
+        this.p = new Point3D(0, 0, 0);   // Point3D
+        this.normal = new Vec3(0, 0, 0); // Vec3
+        this.matPtr = null;              // Will be a Material
+        this.t = 0;                      // Number
         this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
     }
 
@@ -166,6 +173,7 @@ class HitRecord {
     become(hitRecord) {
         this.p = hitRecord.p;
         this.normal = hitRecord.normal;
+        this.matPtr = hitRecord.matPtr;
         this.t = hitRecord.t;
         this.frontFace = hitRecord.frontFace;
     }
@@ -178,10 +186,11 @@ class Hittable {
 }
 
 class Sphere extends Hittable {
-    constructor({center, radius}={}) {
+    constructor(center, radius, material) {
         super();
-        this.center = center; // Vec3
-        this.r = radius; // Number
+        this.center = center;   // Vec3
+        this.r = radius;        // Number
+        this.matPtr = material; // Material
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -206,14 +215,19 @@ class Sphere extends Hittable {
         hitRecord.p = ray.at(hitRecord.t);
         let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
         hitRecord.setFaceNormal(ray, outwardNormal);
+        hitRecord.matPtr = this.matPtr;
 
         return true;
     }
 }
 
 class HittableList {
-    constructor({}={}) {
+    constructor() {
         this.hittables = [];
+    }
+
+    add(hittable) {
+        this.hittables.push(hittable);
     }
     
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -231,6 +245,47 @@ class HittableList {
         });
 
         return hitAnything;
+    }
+}
+
+class Material {
+    scatter(rIn, hitRecord) {
+        throw Error('Method "scatter" is not implemented for this class.');
+    }
+}
+
+class Lambertian extends Material {
+    constructor(albedo) {
+        super();
+        this.albedo = albedo;
+    }
+
+    scatter(rIn, hitRecord) {
+        let scatterDirection = hitRecord.normal.plus(randomUnitVector());
+
+        if (scatterDirection.nearZero()) {
+            scatterDirection = hitRecord.normal;
+        }
+
+        let scattered = new Ray(hitRecord.p, scatterDirection);
+        let attenuation = this.albedo;
+        return [scattered, attenuation, true];
+    }
+}
+
+class Metal extends Material {
+    constructor(albedo, fuzz) {
+        super();
+        this.albedo = albedo;
+        this.fuzz = (fuzz < 1) ? fuzz : 1;
+    }
+
+    scatter(rIn, hitRecord) {
+        let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
+
+        let scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
+        let attenuation = this.albedo;
+        return [scattered, attenuation, (scattered.direction.dot(hitRecord.normal) > 0)];
     }
 }
 
@@ -297,6 +352,10 @@ function randomInHemisphere(normal) {
     }
 }
 
+function reflect(v, n) {
+    return v.minus(n.timesNum(v.dot(n) * 2));
+}
+
 // ----------------------------------------------------------------------------
 // Render
 
@@ -308,15 +367,12 @@ function rayColor(ray, world, depth) {
     }
 
     if (world.hitBy(ray, 0.001, INFINITY, hitRecord)) {
-        // Use this line for more accurate, newer Lambertian Reflection
-        let target = hitRecord.p.plus(hitRecord.normal).plusEq(randomUnitVector());
+        let [scattered, attenuation, scatter] = hitRecord.matPtr.scatter(ray, hitRecord);
 
-        // Use this line less accurate, but more intuitive way of calculating reflection
-        //  the difference between this method of calculating reflection and the
-        //  one from the line above is slight but visible in complex scenes
-        //let target = hitRecord.p.plus(randomInHemisphere(hitRecord.normal));
-
-        return rayColor(new Ray(hitRecord.p, target.minus(hitRecord.p)), world, depth - 1).timesNum(0.5);
+        if (scatter) {
+            return rayColor(scattered, world, depth - 1).times(attenuation);
+        }
+        return new Color(0.0, 0.0, 0.0);
     }
 
     // Background
@@ -332,9 +388,7 @@ function rayColor(ray, world, depth) {
  * Uses async so that the rendering is non-blocking and thus the internet
  * browser will not seize up.
  */
-function main(canvasId, renderPattern) {
-    if (canvasId === undefined) { return; }
-
+function main(renderPattern) {
     // Image Dimensions
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
@@ -351,8 +405,15 @@ function main(canvasId, renderPattern) {
 
     // World
     let world = new HittableList();
-    world.hittables.push(new Sphere({center:new Point3D(0, 0, -1), radius:0.5}));
-    world.hittables.push(new Sphere({center:new Point3D(0, -100.5, -1), radius:100}));
+    let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
+    let materialCenter = new Lambertian(new Color(0.7, 0.3, 0.3));
+    let materialLeft = new Metal(new Color(0.8, 0.8, 0.8), 0.0);
+    let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0.5);
+
+    world.add(new Sphere(new Point3D(0.0, -100.5, -1.0), 100.0, materialGround));
+    world.add(new Sphere(new Point3D(0.0,  0.0,   -1.0), 0.5, materialCenter));
+    world.add(new Sphere(new Point3D(-1.0, 0.0,   -1.0), 0.5, materialLeft));
+    world.add(new Sphere(new Point3D(1.0,  0.0,   -1.0), 0.5, materialRight));
 
     // Camera
     const camera = new Camera();
@@ -383,27 +444,22 @@ function main(canvasId, renderPattern) {
         writePixel(x, y, 256 * clamp(r, 0.0, 1.0), 256 * clamp(g, 0.0, 1.0), 256 * clamp(b, 0.0, 1.0));
     }
 
-    let renderPatternGens;
-    if (false) {
-    } else {
-        renderPatternGens = function () {
-
-            let renderBox = function* (top, left, bottom, right) {
-                for (let x = left; x <= right; x++) {
-                    for (let y = top; y <= bottom; y++) {
-                        yield;
-                        renderPixel(x, y);
-                    }
+    let renderPatternGens = function () {
+        let renderBox = function* (top, left, bottom, right) {
+            for (let x = left; x <= right; x++) {
+                for (let y = top; y <= bottom; y++) {
+                    yield;
+                    renderPixel(x, y);
                 }
-                return;
             }
-
-            // Initialize the render generators
-            const renderGens = [];
-            // Box is rendered inclusive so the pixels on the edges are all rendered
-            renderGens.push(renderBox(0, 0, IMAGE_HEIGHT, IMAGE_WIDTH));
-            return renderGens;
+            return;
         }
+
+        // Initialize the render generators
+        const renderGens = [];
+        // Box is rendered inclusive so the pixels on the edges are all rendered
+        renderGens.push(renderBox(0, 0, IMAGE_HEIGHT, IMAGE_WIDTH));
+        return renderGens;
     }
 
     const renderGens = renderPatternGens();
@@ -447,7 +503,9 @@ function main(canvasId, renderPattern) {
     drawImage(); // make sure final image is drawn
 }
 
-main("#raytracer-out-canvas", "box-left-right");
+this.onmessage = (data) => {
+    main(data.renderPattern);
+}
 
 
 

@@ -1,143 +1,6 @@
-{% extends "./base.html" %}
+let log = safeLogger(1000, false);
+let slog = safeLogger(1000, true);
 
-{% block js_head %}
-<script type="module" src="raytracer2.js" defer></script>
-{% endblock %}
-
-{% block main %}
-<div id="raytracer-main">
-    <p>
-        After following chapters 7-12 of "Ray Tracing in One Weekend" by Peter
-        Shirley, I have made various improvements to the raytracer. For starters,
-        I added antialiasing and basic diffusion in chapters 7 and 8, I then added
-        more diffusion materials through the addition of metal materials and refractive glass
-        materials in chapter 9 and 10, as well as a positionable and more configurable
-        camera in chapters 11 and 12.
-    </p>
-
-    <p>
-        The antialiasing I added in chapter 7 makes curves appear more smooth and
-        edges appear more straight. This is because, without antialiasing, there
-        is only 1 ray of light emitted per pixel, thus making each pixel starkly
-        1 color. If that pixel appears next to another pixel of a different
-        color, as happens when the pixel is on the edge of a green-colored
-        object with a blue background pixel over the edge of the object, you see
-        starkly the contrast between the green pixel and the blue pixel (you see
-        the line created where the green pixel ends and the blue pixel begins).
-        With antialiasing, however, you send 100 (or some arbitrary other
-        number) of rays through the pixel, each one slightly off from the center
-        of the pixel, and then average the colors of the rays. This way some of
-        the rays will hit the edge and others will miss it, thus some will
-        return green and some will return blue. As you then average the colors
-        of the rays, you will make this edge pixel a nice transition pixel
-        between the green pixels of the object and the blue pixels of the
-        background, reducing the outline of each pixel and enhancing the outline
-        of the shape. Antialiasing can be seen in the render below at edges of
-        each shape as the edge pixel transitions between the color of the object
-        the color of whatever is on the other side of the edge of the object.
-    </p>
-
-    <p>
-        When I added diffusion in chapters 8-10, I added materials to the
-        objects so that they could have different properties and thus affect the
-        light differently when hit. Diffusion allows materials
-        to scatter almost no light, a bit of light, or almost all light that hits them.
-        This is the difference between the matte grey, brown, and blue spheres below and
-        the reflective metal and gold spheres in the middle render below.
-        Materials can also scatter light in different ways. Some scatter light by reflecting
-        it (like the metal spheres below) and others refract light (like the glass sphere
-        below) by allowing the light ray to pass through the object, but bending it as it
-        does so. 
-    </p>
-
-    <p>
-        The camera improvements made in chapters 11 and 12 allow the user change
-        the camera's positon, focal point, orientation, aperature, focus
-        distance, field of view, and change what the point in the cenery the
-        camera is looking at. All of these added features allow the user of the
-        ray-tracer to use the camera like a proper photographer and take more
-        interesting pictures of the scenery, but only a simple demonstration of
-        this is shown below.
-    </p>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas1"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas2"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas3"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas4"></canvas>
-    </div>
-
-    <ul>
-        <li>My Goals</li>
-        <ul>
-            <li>Change the website so that it uses an html generator to generate the html pages more easily.</li>
-            <li>Finish chapters 7-12 of the textbook and update the website to reflect the new changes to the raytracer.</li>
-        </ul>
-
-        <li>My Results</li>
-        <ul>
-            <li>I learned python Jinja and used it for html generation of my website.</li>
-            <li>I fixed the async-await issue that was causing the rendering to not be shown until after all of the render was completed.</li>
-            <li>I successully completed chapters 7-12 of the textbook, improving the raytracer by implementing:</li>
-            <ul>
-                <li>antialiasing</li>
-                <li>different materials for different objects</li>
-                <ul>
-                    <li>Lambertian material for matte objects</li>
-                    <li>Metal material for metal objects that reflect light to various degrees</li>
-                    <li>Dialectric material for objects that refract light such as glass</li>
-                </ul>
-                <li>improved camera manipulation</li>
-                <ul>
-                    <li>positioning</li>
-                    <li>tilt</li>
-                    <li>rotation</li>
-                    <li>field of view</li>
-                    <li>aperature</li>
-                    <li>aspect ratio</li>
-                    <li>focus distance</li>
-                </ul>
-            </ul>
-        </ul>
-
-        <li>My Work</li>
-        <ul>
-            <li>I spent multiple days figuring out both Jinja and the async-await issue.</li>
-            <li>I also spent multiple days writing the improvements to the ray tracer and then debugging the code afterwards.</li>
-        </ul>
-        <li>What I Learned</li>
-        <ul>
-            <li>More JavaScript</li>
-            <ul>
-                <li>That async-await is DOM-blocking in JavaScript, causing the page to not load until all the rendering is complete even if the rendering is happening asyncronously in the background.</li>
-                <li>That JavaScript has something called Web Workers for multi-threading and thus for running asyncronous code without blocking the DOM.</li>
-                <li>How to use Web Workers to run code asyncronously.</li>
-            </ul>
-            <li>More About Ray Tracing</li>
-            <ul>
-                <li>How antialiasing works and how to implement it.</li>
-                <li>How to give objects different materials.</li>
-                <li>How different materials affect light differently.</li>
-                <li>How to implement the different ways that matte, reflective, and refractive materials affect light.</li>
-                <li>How to make a camera more versitile with various features such as position, tilt, rotation, field of view, aperature, and focus distance.</li>
-            </ul>
-        </ul>
-    </ul>
-
-    <p>
-        Here is the source code as it was at the end of this stage of development:
-    </p>
-
-<code><pre>
 // ----------------------------------------------------------------------------
 // Constants
 
@@ -155,7 +18,7 @@ class Vec3 {
     }
 
     toString() {
-        return `<Vec3(\${this.x}, \${this.y}, \${this.z})>`;
+        return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
 
     nearZero() {
@@ -271,13 +134,13 @@ class Color extends Vec3 {
     set b(newB) { this.z = newB; }
 
     toString() {
-        return `<Color(\${this.r}, \${this.g}, \${this.b})>`;
+        return `<Color(${this.r}, ${this.g}, ${this.b})>`;
     }
 }
 
 class Point3D extends Vec3 {
     toString() {
-        return `<Point3D(\${this.x}, \${this.y}, \${this.z})>`;
+        return `<Point3D(${this.x}, ${this.y}, ${this.z})>`;
     }
 }
 
@@ -294,7 +157,7 @@ class Ray {
     }
 
     toString() {
-        return `<Ray(origin=\${this.origin}, direction=\${this.direction})>`
+        return `<Ray(origin=${this.origin}, direction=${this.direction})>`
     }
 
     /**
@@ -315,7 +178,7 @@ class HitRecord {
     }
 
     toString() {
-        return `<HitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})>`;
+        return `<HitRecord(p=${this.p}, normal=${this.normal}, material=${this.matPtr}, t=${this.t}, frontFace=${this.frontFace})>`;
     }
 
     setFaceNormal(ray, outwardNormal) {
@@ -343,7 +206,7 @@ class Sphere extends Hittable {
     }
 
     toString() {
-        return `<Sphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})>`;
+        return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -382,7 +245,7 @@ class HittableList {
     }
 
     toString() {
-        return `<HittableList(hittables=[\${this.hittables}])>`;
+        return `<HittableList(hittables=[${this.hittables}])>`;
     }
 
     add(hittable) {
@@ -421,7 +284,7 @@ class Lambertian extends Material {
     }
 
     toString() {
-        return `<Lambertian(albedo=\${this.albedo})>`
+        return `<Lambertian(albedo=${this.albedo})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -445,7 +308,7 @@ class Metal extends Material {
     }
 
     toString() {
-        return `<Metal(albedo=\${this.albedo}, fuzz=\${this.fuzz})>`
+        return `<Metal(albedo=${this.albedo}, fuzz=${this.fuzz})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -464,7 +327,7 @@ class Dielectric extends Material {
     }
 
     toString() {
-        return `<Dialectric(indexOfRefraction=\${this.ir})>`
+        return `<Dialectric(indexOfRefraction=${this.ir})>`
     }
 
     reflectance(cosine, refIdx) {
@@ -647,7 +510,7 @@ function main(renderPattern=null) {
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 100;
+    const SAMPLES_PER_PIXEL = 50;
     const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
@@ -658,6 +521,7 @@ function main(renderPattern=null) {
     }
 
     // World
+    /*
     let world = new HittableList();
 
     let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
@@ -670,6 +534,9 @@ function main(renderPattern=null) {
     world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), 0.5, materialLeft));
     world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
     world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
+    */
+
+    let world = randomScene();
 
     // Camera
 
@@ -751,8 +618,283 @@ function main(renderPattern=null) {
 }
 
 this.onmessage = (event) => {
+    let renderPattern = event.data.renderPattern;
+
+    if (renderPattern !== undefined && renderPattern !== null) {
+        let numRows = (renderPattern.numRows === undefined) ? 1 : renderPattern.numRows;
+        let numCols = (renderPattern.numCols === undefined) ? 1 : renderPattern.numCols;
+        numRows = (numRows < 1) ? 1 : numRows;
+        numCols = (numCols < 1) ? 1 : numRows;
+
+        let pattern = renderPattern.pattern.toLowerCase();
+
+        if (pattern === "random") {
+            let patterns = [
+                "random-points",
+                "outside-in",
+                "iter-box" // proxy for left-up-row below so 1/3 chance of happening
+            ];
+            pattern = patterns[randomInt(0, patterns.length - 1)];
+
+            if (pattern === "iter-box") {
+                patterns = [
+                    "left-up-row", "right-up-row", "left-down-row", "right-down-row",
+                    "left-up-col", "right-up-col", "left-down-col", "right-down-col"
+                ];
+                pattern = patterns[randomInt(0, patterns.length - 1)];
+            }
+        }
+
+        switch (pattern) {
+            case "random-points":
+                renderPattern = boxesPattern(numRows, numCols, randomPointsInBox);
+                break;
+            case "outside-in":
+                renderPattern = boxesPattern(numRows, numCols, pointsFromOutsideIn);
+                break;
+
+            case "left-up-row":
+            case "right-up-row":
+            case "left-down-row":
+            case "right-down-row":
+            case "left-up-col":
+            case "right-up-col":
+            case "left-down-col":
+            case "right-down-col":
+                let [toRight, toBottom, row] = [pattern.includes("right"), pattern.includes("down"), pattern.includes("row")];
+                renderPattern = boxesPattern(numRows, numCols, iterBoxGen(toRight, toBottom, row));
+                break;
+
+            default:
+                renderPattern = null;
+        }
+    }
+
     main(renderPattern);
 }
-</pre></code>
-</div>
-{% endblock %}
+
+// Helper Functions
+function randomScene() {
+    let world = new HittableList();
+
+    const ground_mt = new Lambertian(new Color(0.5, 0.5, 0.5));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, ground_mt));
+
+    let randomAmount = 11;
+    for (let i = -randomAmount; i < randomAmount; ++i) {
+        for (let j = -randomAmount; j < randomAmount; ++j) {
+            let mat = randomDouble();
+            let center = new Point3D(i + (0.9 * randomDouble()), 0.2, j + (0.9 * randomDouble()));
+
+            if (center.minus(new Point3D(4, 0.2, 0)).length() > 0.9) {
+                if (mat < 0.8) {
+                    let albedo = Vec3.prototype.random().times(Vec3.prototype.random());
+                    let sphereMaterial = new Lambertian(albedo);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else if (mat < 0.95) {
+                    let albedo = Vec3.prototype.random(0.5, 1);
+                    let fuzz = randomDouble(0, 0.5);
+                    let sphereMaterial = new Metal(albedo, fuzz);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else {
+                    let sphereMaterial = new Dielectric(1.5);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    const mat1 = new Dielectric(1.5);
+    world.add(new Sphere(new Point3D(0, 1, 0), 1, mat1));
+
+    const mat2 = new Lambertian(new Color(0.4, 0.2, 0.1));
+    world.add(new Sphere(new Point3D(-4, 1, 0), 1, mat2));
+
+    const mat3 = new Metal(new Color(0.7, 0.6, 0.5), 0);
+    world.add(new Sphere(new Point3D(4, 1, 0), 1, mat3));
+
+    return world;
+}
+
+
+// ---------------------------------------------------------------------------
+// Render Patterns
+
+function divImage(numCols, numRows, imageWidth, imageHeight, callback) {
+    if (imageWidth < numCols) numCols = imageWidth;
+    if (imageHeight < numRows) numRows = imageHeight;
+
+    const boxWidth = Math.ceil(imageWidth / numCols);
+    const boxHeight = Math.ceil(imageHeight / numRows);
+
+    for (let y = 0; y < imageHeight; y += boxHeight) {
+        for (let x = 0; x < imageWidth; x += boxWidth) {
+            let [left, right, top, bottom] = [x, x + boxWidth, y, y + boxHeight];
+
+            // Gaurantee that the square is inside the Image (although might be slightly smaller than other squares)
+            //left = clamp(left, 0, imageWidth);
+            //right = clamp(right, 0, imageWidth);
+            //top = clamp(top, 0, imageHeight);
+            //bottom = clamp(bottom, 0, imageHeight);
+
+            // Gaurantee that the standard Graphics coordinate system is in use
+            // with positive y going down and negative y going up
+            if (left > right) [left, right] = [right, left];
+            if (top > bottom) [top, bottom] = [bottom, top];
+
+            // Call the callback with the dimensions of the current box
+            callback(left, right, top, bottom);
+        }
+    }
+}
+
+function* iterBox(left, right, top, bottom, leftToRight=true, topToBottom=true, rowMajor=true) {
+    let [colStart, colEnd, colDelta] = leftToRight ? [left, right + 1, 1] : [right, left - 1, -1];
+    let [rowStart, rowEnd, rowDelta] = topToBottom ? [top, bottom + 1, 1] : [bottom, top - 1, -1];
+
+    if (rowMajor) {
+        for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+            for (let col = colStart; col !== colEnd; col += colDelta) {
+                yield [col, row];
+            }
+        }
+    } else {
+        for (let col = colStart; col !== colEnd; col += colDelta) {
+            for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+                yield [col, row];
+            }
+        }
+    }
+}
+
+function iterBoxGen(leftToRight=true, topToBottom=true, rowMajor=true) {
+    function iterBoxWrapper(left, right, top, bottom) {
+        return iterBox(left, right, top, bottom, leftToRight, topToBottom, rowMajor);
+    }
+    return iterBoxWrapper;
+}
+
+function* pointsFromOutsideIn(left, right, top, bottom) {
+    // Don't know why but need to shift box to not miss left and top edges on
+    // left and top sides of full image
+    left--; right--; top--; bottom--;
+
+    let x = left; 
+    let y = bottom; 
+
+    let direction = 0; // 0 = left-right, 1 = bottom-top, 2 = right-left, 3 = top-bottom
+
+    function move(x, y, direction) {
+        switch (direction) {
+            case 0: x++; break;
+            case 1: y--; break;
+            case 2: x--; break;
+            case 3: y++; break;
+        }
+        return [x, y];
+    }
+
+    function shrinkBox(direction, left, right, top, bottom) {
+        switch (direction) {
+            case 0: top++; break;
+            case 1: left++; break;
+            case 2: bottom--; break;
+            case 3: right--; break;
+        }
+        return [left, right, top, bottom];
+    }
+
+    while (true) {
+        yield [x, y];
+
+        let [nextX, nextY] = move(x, y, direction);
+
+        if (!inBox(nextX, nextY, left, right, top, bottom)) {
+            [left, right, top, bottom] = shrinkBox(direction, left, right, top, bottom);
+            direction = (direction + 1) % 4;
+
+            [nextX, nextY] = move(x, y, direction);
+
+            if (!inBox(nextX, nextY, left, right, top, bottom)) {
+                break;
+            }
+        }
+
+        [x, y] = [nextX, nextY];
+    }
+}
+
+function* randomPointsInBox(left, right, top, bottom) {
+    const points = [];
+
+    for (let y = top; y < bottom; y++) {
+        for (let x = left; x < right; x++) {
+            points.push([x, y]);
+        }
+    }
+
+    while (0 < points.length) {
+        let i = randomInt(0, points.length - 1);
+        yield points.splice(i, 1)[0];
+    }
+}
+
+function boxesPattern(numRows, numCols, genTemplate) {
+    function* boxesPatternGen(imageWidth, imageHeight) {
+        const renderGens = [];
+
+        divImage(numRows, numCols, imageWidth, imageHeight, (left, right, top, bottom) => {
+            renderGens.push(genTemplate(left, right, top, bottom));
+        });
+
+        while (0 < renderGens.length) {
+            const yieldPoints = [];
+
+            let i = 0;
+            while (i < renderGens.length) {
+                let ret = renderGens[i].next();
+
+                if (ret.done) {
+                    renderGens.splice(i, 1);
+                    continue;
+                }
+
+                yieldPoints.push(ret.value);
+                i++;
+            }
+
+            yield yieldPoints;
+        }
+    }
+    return boxesPatternGen;
+}
+
+
+
+/**
+ * Helper function that only allows you to log something using it a set number
+ * of times, that way the website does not break because you tried to log something
+ * 100000000000 times because this only lets you log it numTimes number of times before
+ * it does not log anything else
+ */
+function safeLogger(numTimes=10, logToString=false) {
+    function log() {
+        if (numTimes > 0) {
+            if (logToString) {
+                let args = [];
+                for (let arg of arguments) {
+                    args.push(arg.toString());
+                }
+                console.log(...args);
+            } else {
+                console.log(...arguments);
+            }
+            numTimes--;
+        }
+
+        if (arguments.length === 1) {
+            return arguments[0];
+        }
+    }
+    return log;
+}

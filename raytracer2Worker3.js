@@ -17,13 +17,6 @@ class Vec3 {
         this.z = z;
     }
 
-    get r() { return this.x; }
-    set r(newR) { this.x = newR; }
-    get g() { return this.y; }
-    set g(newG) { this.y = newG; }
-    get b() { return this.z; }
-    set b(newB) { this.z = newB; }
-
     toString() {
         return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
@@ -35,15 +28,15 @@ class Vec3 {
     }
 
     random(min=0.0, max=1.0) {
-        return new Vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
+        return new this.constructor(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
     }
 
     copy() {
-        return new Vec3(this.x, this.y, this.z);
+        return new this.constructor(this.x, this.y, this.z);
     }
 
     negative() {
-        return new Vec3(-this.x, -this.y, -this.z);
+        return new this.constructor(-this.x, -this.y, -this.z);
     }
 
     minusEq(vec3) {
@@ -83,39 +76,35 @@ class Vec3 {
     }
 
     plus(vec3) {
-        return new Vec3((this.x + vec3.x), (this.y + vec3.y), (this.z + vec3.z));
+        return new this.constructor((this.x + vec3.x), (this.y + vec3.y), (this.z + vec3.z));
     }
 
     plusNum(num) {
-        return new Vec3((this.x + num), (this.y + num), (this.z + num));
+        return new this.constructor((this.x + num), (this.y + num), (this.z + num));
     }
 
     minus(vec3) {
-        return new Vec3((this.x - vec3.x), (this.y - vec3.y), (this.z - vec3.z));
+        return new this.constructor((this.x - vec3.x), (this.y - vec3.y), (this.z - vec3.z));
     }
 
     minusNum(num) {
-        return new Vec3((this.x - num), (this.y - num), (this.z - num));
-    }
-
-    minusedByNum(num) {
-        return new Vec3((num - this.x), (num - this.y), (num - this.z));
+        return new this.constructor((this.x - num), (this.y - num), (this.z - num));
     }
 
     times(vec3) {
-        return new Vec3((this.x * vec3.x), (this.y * vec3.y), (this.z * vec3.z));
+        return new this.constructor((this.x * vec3.x), (this.y * vec3.y), (this.z * vec3.z));
     }
 
     timesNum(num) {
-        return new Vec3((this.x * num), (this.y * num), (this.z * num));
+        return new this.constructor((this.x * num), (this.y * num), (this.z * num));
     }
     
     divBy(vec3) {
-        return new Vec3((this.x / vec3.x), (this.y /vec3.y), (this.z /vec3.z));
+        return new this.constructor((this.x / vec3.x), (this.y / vec3.y), (this.z / vec3.z));
     }
 
     divByNum(num) {
-        return new Vec3((this.x / num), (this.y / num), (this.z / num));
+        return new this.constructor((this.x / num), (this.y / num), (this.z / num));
     }
 
     dot(vec3) {
@@ -123,10 +112,10 @@ class Vec3 {
     }
 
     cross(vec3) {
-        return new Vec3(
-            this.y * vec3.z - this.z * vec3.y,
-            this.z * vec3.x - this.x * vec3.z,
-            this.x * vec3.y - this.y * vec3.x
+        return new this.constructor(
+            (this.y * vec3.z) - (this.z * vec3.y),
+            (this.z * vec3.x) - (this.x * vec3.z),
+            (this.x * vec3.y) - (this.y * vec3.x)
         );
     }
 
@@ -136,8 +125,24 @@ class Vec3 {
 }
 
 // Vec3 aliases
-const Color = Vec3;
-const Point3D = Vec3;
+class Color extends Vec3 {
+    get r() { return this.x; }
+    set r(newR) { this.x = newR; }
+    get g() { return this.y; }
+    set g(newG) { this.y = newG; }
+    get b() { return this.z; }
+    set b(newB) { this.z = newB; }
+
+    toString() {
+        return `<Color(${this.r}, ${this.g}, ${this.b})>`;
+    }
+}
+
+class Point3D extends Vec3 {
+    toString() {
+        return `<Point3D(${this.x}, ${this.y}, ${this.z})>`;
+    }
+}
 
 const WHITE = new Color(1.0, 1.0, 1.0);
 const BLACK = new Color(0.0, 0.0, 0.0);
@@ -165,10 +170,10 @@ class Ray {
 
 class HitRecord {
     constructor() {
-        this.p = new Point3D(0, 0, 0);   // Point3D
-        this.normal = new Vec3(0, 0, 0); // Vec3
-        this.matPtr = null;              // Will be a Material
-        this.t = 0;                      // Number
+        this.p = null;      // Point3D
+        this.normal = null; // Vec3
+        this.matPtr = null; // Will be a Material
+        this.t = 0;         // Number
         this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
     }
 
@@ -179,14 +184,6 @@ class HitRecord {
     setFaceNormal(ray, outwardNormal) {
         this.frontFace = ray.direction.dot(outwardNormal) < 0;
         this.normal = this.frontFace ? outwardNormal : outwardNormal.negative();
-    }
-
-    become(hitRecord) {
-        this.p = hitRecord.p;
-        this.normal = hitRecord.normal;
-        this.matPtr = hitRecord.matPtr;
-        this.t = hitRecord.t;
-        this.frontFace = hitRecord.frontFace;
     }
 }
 
@@ -220,16 +217,18 @@ class Sphere extends Hittable {
 
         let discriminant = (halfB * halfB) - (a * c);
         if (discriminant < 0) { return false; }
-        let sqrtd = Math.sqrt(discriminant);
+        let sqrtD = Math.sqrt(discriminant);
 
-        // find the nearest root that lies in the acceptable range.
-        let root = (-halfB - sqrtd) / a;
+        // find the nearest root that lies in the acceptable range to determine
+        //  if the sphere was hit
+        let root = (-halfB - sqrtD) / a;
         if ((root < tMin) || (tMax < root)) {
-            let root = (-halfB + sqrtd) / a;
+            root = (-halfB + sqrtD) / a;
             if ((root < tMin) || (tMax < root)) {
                 return false;
             }
         }
+
         hitRecord.t = root;
         hitRecord.p = ray.at(hitRecord.t);
         let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
@@ -254,18 +253,15 @@ class HittableList {
     }
     
     hitBy(ray, tMin, tMax, hitRecord) {
-        let tempHitRecord = new HitRecord();
-
         let hitAnything = false;
         let closestSoFar = tMax;
 
-        this.hittables.forEach((hittable) => {
-            if (hittable.hitBy(ray, tMin, closestSoFar, tempHitRecord)) {
+        for (let hittable of this.hittables) {
+            if (hittable.hitBy(ray, tMin, closestSoFar, hitRecord)) {
                 hitAnything = true;
-                closestSoFar = tempHitRecord.t;
-                hitRecord.become(tempHitRecord);
+                closestSoFar = hitRecord.t;
             }
-        });
+        }
 
         return hitAnything;
     }
@@ -324,7 +320,7 @@ class Metal extends Material {
     }
 }
 
-class Dialectric extends Material {
+class Dielectric extends Material {
     constructor(indexOfRefraction) {
         super();
         this.ir = indexOfRefraction;
@@ -348,17 +344,17 @@ class Dialectric extends Material {
         let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
         let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
 
-        let cannotRefract = (refractionRatio * sinTheta) > 1.0;
+        let cannotRefract = refractionRatio * sinTheta > 1.0;
         let direction;
 
         if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) > randomDouble(0.0, 1.0))) {
-            direction = refract(unitDirection, hitRecord.normal, refractionRatio);
-            //direction = reflect(unitDirection, hitRecord.normal);
+            direction = reflect(unitDirection, hitRecord.normal);
         } else {
             direction = refract(unitDirection, hitRecord.normal, refractionRatio);
         }
 
         this.scattered = new Ray(hitRecord.p, direction);
+
         return true;
     }
 }
@@ -395,7 +391,7 @@ class Camera {
         let rd = randomInUnitDisk().timesNum(this.lensRadius);
         let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
 
-        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin) .minus(offset);
+        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin).minus(offset);
         return new Ray(this.origin.plus(offset), direction);
     }
 }
@@ -412,15 +408,15 @@ function degreesToRadians(degrees) {
  * 
  * If neither min nor max are specified, the range is assumed to be [0, 1)
  */
-function randomDouble(min=0.0, max=0.1) {
+function randomDouble(min=0.0, max=1.0) {
     return (min + ((max - min) * Math.random()));
 }
 
 /**
  * Returns a random integer value in [min, max]
  */
-function randomInt(min=0, max=1) {
-    return (min + Math.round((max - min) * Math.random()));
+function randomInt(min=0, max=1.0) {
+    return Math.round(randomDouble(min, max));
 }
 
 /**
@@ -459,8 +455,8 @@ function reflect(v, n) {
 
 function refract(uv, n, etaiOverEtat) {
     let cosTheta = Math.min(uv.negative().dot(n), 1.0);
-    let rOutPerp = uv.plus(n.timesNum(cosTheta)).timesNum(etaiOverEtat);
-    let rOutParallel = n.timesNum(-Math.sqrt(Math.abs(1.0 - rOutPerp.lengthSquared())));
+    const rOutPerp = uv.plus(n.timesNum(cosTheta)).timesNum(etaiOverEtat);
+    const rOutParallel = n.timesNum(-Math.sqrt(Math.abs(1.0 - rOutPerp.lengthSquared())));
 
     return rOutPerp.plus(rOutParallel);
 }
@@ -488,7 +484,7 @@ function rayColor(ray, world, depth) {
         return new Color(0.0, 0.0, 0.0);
     }
 
-    if (world.hitBy(ray, 0.001, INFINITY, hitRecord)) {
+    if (world.hitBy(ray, 0.001, Infinity, hitRecord)) {
         if (hitRecord.matPtr.scatter(ray, hitRecord)) {
             return hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, world, depth - 1));
         }
@@ -529,7 +525,7 @@ function main(renderPattern=null) {
 
     let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
     let materialCenter = new Lambertian(new Color(0.1, 0.2, 0.5));
-    let materialLeft = new Dialectric(1.5);
+    let materialLeft = new Dielectric(1.5);
     let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0,0);
 
     world.add(new Sphere(new Point3D(0.0, -100.5, -1.0), 100.0, materialGround));
@@ -538,13 +534,15 @@ function main(renderPattern=null) {
     world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
     world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
 
+    //let world = randomScene();
+
     // Camera
 
-    let lookfrom = new Point3D(-3, 3, 2);
+    let lookfrom = new Point3D(-4, 1, 2);
     let lookat = new Point3D(0, 0, -1);
     let vup = new Vec3(0, 1, 0);
     let distToFocus = lookfrom.minus(lookat).length();
-    let aperture = 2.0
+    let aperture = 1.0
 
     const camera = new Camera(lookfrom, lookat, vup, 20, ASPECT_RATIO, aperture, distToFocus);
 
@@ -557,9 +555,7 @@ function main(renderPattern=null) {
         for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
-            let r = camera.getRay(u, v);
-            let rayColorRes = rayColor(r, world, MAX_DEPTH);
-            pixelColor.plusEq(rayColorRes);
+            pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
         }
 
         // Figure out value of the antialiased pixel
@@ -605,9 +601,7 @@ function main(renderPattern=null) {
         } 
 
         // render the pixels
-        for (let pixel of pixels) {
-            let [x, y] = pixel;
-
+        for (let [x, y] of pixels) {
 
             // If a pixel is not in the image then don't render it
             if (inBox(x, y, 0, IMAGE_WIDTH, 0, IMAGE_HEIGHT)) {
@@ -675,6 +669,49 @@ this.onmessage = (event) => {
     }
 
     main(renderPattern);
+}
+
+// Helper Functions
+function randomScene() {
+    let world = new HittableList();
+
+    const ground_mt = new Lambertian(new Color(0.5, 0.5, 0.5));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, ground_mt));
+
+    let randomAmount = 11;
+    for (let i = -randomAmount; i < randomAmount; ++i) {
+        for (let j = -randomAmount; j < randomAmount; ++j) {
+            let mat = randomDouble();
+            let center = new Point3D(i + (0.9 * randomDouble()), 0.2, j + (0.9 * randomDouble()));
+
+            if (center.minus(new Point3D(4, 0.2, 0)).length() > 0.9) {
+                if (mat < 0.8) {
+                    let albedo = Vec3.prototype.random().times(Vec3.prototype.random());
+                    let sphereMaterial = new Lambertian(albedo);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else if (mat < 0.95) {
+                    let albedo = Vec3.prototype.random(0.5, 1);
+                    let fuzz = randomDouble(0, 0.5);
+                    let sphereMaterial = new Metal(albedo, fuzz);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else {
+                    let sphereMaterial = new Dielectric(1.5);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    const mat1 = new Dielectric(1.5);
+    world.add(new Sphere(new Point3D(0, 1, 0), 1, mat1));
+
+    const mat2 = new Lambertian(new Color(0.4, 0.2, 0.1));
+    world.add(new Sphere(new Point3D(-4, 1, 0), 1, mat2));
+
+    const mat3 = new Metal(new Color(0.7, 0.6, 0.5), 0);
+    world.add(new Sphere(new Point3D(4, 1, 0), 1, mat3));
+
+    return world;
 }
 
 

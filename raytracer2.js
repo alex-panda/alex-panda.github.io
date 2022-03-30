@@ -57,6 +57,12 @@ if (typeof(Worker) !== undefined) {
                 pattern:"random"
             }, 0, -1, 0, 0);
 
+    startWorker("./raytracer2Worker4.js", "#raytracer-out-canvas4", 
+            {
+                numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
+                pattern:"random"
+            }, 0, -1, 0, 0);
+
 } else {
     alert("Web workers are not supported by your browser so the ray tracing can't happen.");
 }

@@ -540,13 +540,25 @@ function main(renderPattern=null) {
 
     // Camera
 
-    let lookfrom = new Point3D(-4, 1, 2);
-    let lookat = new Point3D(0, 0, -1);
-    let vup = new Vec3(0, 1, 0);
-    let distToFocus = lookfrom.minus(lookat).length();
-    let aperture = 1.0
+    const lookfrom = new Point3D(13, 2, 3);
+    const lookat = new Point3D(0, 0, 0);
+    const vup = new Vec3(0, 1, 0);
+    const fieldOfView = 20;
+    const aperture = 0.2;
+    const distToFocus = 10;
 
-    const camera = new Camera(lookfrom, lookat, vup, 20, ASPECT_RATIO, aperture, distToFocus);
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus);
+
+    /*
+    const lookfrom = new Point3D(-4, 1, 2);
+    const lookat = new Point3D(0, 0, -1);
+    const vup = new Vec3(0, 1, 0);
+    const fieldOfView = 20;
+    const distToFocus = lookfrom.minus(lookat).length();
+    const aperture = 1.0
+
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus);
+    */
 
     // --- Render
 

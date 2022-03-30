@@ -7,7 +7,7 @@ function randomInt(min=0, max=1) {
 
 if (typeof(Worker) !== undefined) {
 
-    function startWorker(workerLocation, outCanvasId, renderPattern=null) {
+    function startWorker(workerLocation, outCanvasId, renderPattern=null, x=0, y=0, width=0, height=0) {
         let w = new Worker(workerLocation);
 
         let sizeNotSet = true;
@@ -21,17 +21,17 @@ if (typeof(Worker) !== undefined) {
             // Set the size of the canvas, but resetting the size clears the canvas
             //  so only do it the first time (before any of the pixels have been drawn)
             if (sizeNotSet) {
-                canvas.width = IMAGE_WIDTH;
-                canvas.height = IMAGE_HEIGHT;
+                canvas.width = IMAGE_WIDTH + width;
+                canvas.height = IMAGE_HEIGHT + height;
                 sizeNotSet = false;
             }
 
-            for (let [x, y, [r, g, b]] of newlyRenderedPixels) {
+            for (let [pixX, pixY, [r, g, b]] of newlyRenderedPixels) {
                 context.fillStyle = `rgb(${r}, ${g}, ${b})`;
 
                 // Need to inverse y because the image was rendered with the y-axis going up but canvas
                 //  has the y-axis go down
-                context.fillRect(x, IMAGE_HEIGHT - y - 1, 1, 1);
+                context.fillRect(pixX + x, (IMAGE_HEIGHT - pixY) + y, 1, 1);
             }
         }
 
@@ -44,18 +44,18 @@ if (typeof(Worker) !== undefined) {
 
     // This one renders a sphere on a surface to show off reflections and
     // resulting shadows 
-    //startWorker("./raytracer2Worker1.js", "#raytracer-out-canvas");
+    startWorker("./raytracer2Worker1.js", "#raytracer-out-canvas1", null, 0, 0, 0, 0);
 
     // Renders 3 spheres, showing off the ability of objects to have different
     // materials such as reflective metals, fuzzy-reflective metals, and matte
     // materials
-    //startWorker("./raytracer2Worker2.js", "#raytracer-out-canvas");
+    startWorker("./raytracer2Worker2.js", "#raytracer-out-canvas2", null, 0, 0);
 
-    startWorker("./raytracer2Worker3.js", "#raytracer-out-canvas", 
+    startWorker("./raytracer2Worker3.js", "#raytracer-out-canvas3", 
             {
-                numRows:randomInt(1, 12), numCols:randomInt(1, 12), 
+                numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
                 pattern:"random"
-            });
+            }, 0, -1, 0, 0);
 
 } else {
     alert("Web workers are not supported by your browser so the ray tracing can't happen.");

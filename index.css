@@ -79,7 +79,7 @@ body button {
 
 #raytracer-main canvas {
   border: 1px solid black;
-  margin: 1rem;
+  margin: 0rem;
   padding: 0px;
 }
 

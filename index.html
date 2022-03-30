@@ -36,22 +36,126 @@
                 
 <div id="raytracer-main">
     <p>
-        After following the next 6 chapters of "Ray Tracing in One Weekend" by Peter
-        Shirley and thus finishing the book.
+        After following chapters 7-12 of "Ray Tracing in One Weekend" by Peter
+        Shirley, I have made various improvements to the raytracer. For starters,
+        I added antialiasing and basic diffusion in chapters 7 and 8, I then added
+        more diffusion through the addition of metal materials and refractive glass
+        materials in chapter 9 and 10, as well as a positionable and more configurable
+        camera in chapters 11 and 12.
+    </p>
+
+    <p>
+        The antialiasing I added in chapter 7 makes curves appear more smooth and
+        edges appear more straight. This is because, without antialiasing, there
+        is only 1 ray of light emitted per pixel, thus making each pixel starkly
+        1 color. If that pixel appears next to another pixel of a different
+        color, as happens when the pixel is on the edge of a green-colored
+        object with a blue background pixel over the edge of the object, you see
+        starkly the contrast between the green pixel and the blue pixel (you see
+        the line created where the green pixel ends and the blue pixel begins).
+        With antialiasing, however, you send 100 (or some arbitrary other
+        number) of rays through the pixel, each one slightly off from the center
+        of the pixel, and then average the colors of the rays. This way some of
+        the rays will hit the edge and others will miss it, thus some will
+        return green and some will return blue. As you then average the colors
+        of the rays, you will make this edge pixel a nice transition pixel
+        between the green pixels of the object and the blue pixels of the
+        background, reducing the outline of each pixel and enhancing the outline
+        of the shape. Antialiasing can be seen in the render below at edges of
+        each shape as the edge pixel transitions between the color of the object
+        the color of whatever is on the other side of the edge of the object.
+    </p>
+
+    <p>
+        When I added diffusion in chapters 8-10, I added materials to the
+        objects so that they could have different properties and thus affect the
+        light differently when hit. Diffusion allows materials
+        to scatter almost no light, a bit of light, or almost all light that hits them.
+        This is the difference between the matte grey, brown, and blue spheres below and
+        the reflective metal and gold spheres in the middle render below.
+        Materials can also scatter light in different ways. Some scatter light by reflecting
+        it (like the metal spheres below) and others refract light (like the glass sphere
+        below) by allowing the light ray to pass through the object, but bending it as it
+        does so. 
+    </p>
+
+    <p>
+        The camera improvements made in chapters 11 and 12 allow the user change
+        the camera's positon, focal point, orientation, aperature, focus
+        distance, field of view, and change what the point in the cenery the
+        camera is looking at. All of these added features allow the user of the
+        ray-tracer to use the camera like a proper photographer and take more
+        interesting pictures of the scenery, but only a simple demonstration of
+        this is shown below.
     </p>
 
     <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas"></canvas>
+        <canvas id="raytracer-out-canvas1"></canvas>
+    </div>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas2"></canvas>
+    </div>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas3"></canvas>
     </div>
 
     <ul>
         <li>My Goals</li>
         <ul>
-            
+            <li>Change the website so that it uses an html generator to generate the html pages more easily.</li>
+            <li>Finish chapters 7-12 of the textbook and update the website to reflect the new changes to the raytracer.</li>
         </ul>
+
         <li>My Results</li>
+        <ul>
+            <li>I learned python Jinja and used it for html generation of my website.</li>
+            <li>I fixed the async-await issue that was causing the rendering to not be shown until after all of the render was completed.</li>
+            <li>I successully completed chapters 7-12 of the textbook, improving the raytracer by implementing:</li>
+            <ul>
+                <li>antialiasing</li>
+                <li>different materials for different objects</li>
+                <ul>
+                    <li>Lambertian material for matte objects</li>
+                    <li>Metal material for metal objects that reflect light to various degrees</li>
+                    <li>Dialectric material for objects that refract light such as glass</li>
+                </ul>
+                <li>improved camera manipulation</li>
+                <ul>
+                    <li>positioning</li>
+                    <li>tilt</li>
+                    <li>rotation</li>
+                    <li>field of view</li>
+                    <li>aperature</li>
+                    <li>aspect ratio</li>
+                    <li>focus distance</li>
+                </ul>
+            </ul>
+        </ul>
+
         <li>My Work</li>
+        <ul>
+            <li>I spent multiple days figuring out both Jinja and the async-await issue.</li>
+            <li>I also spent multiple days writing the improvements to the ray tracer and then debugging the code afterwards.</li>
+        </ul>
         <li>What I Learned</li>
+        <ul>
+            <li>More JavaScript</li>
+            <ul>
+                <li>That async-await is DOM-blocking in JavaScript, causing the page to not load until all the rendering is complete even if the rendering is happening asyncronously in the background.</li>
+                <li>That JavaScript has something called Web Workers for multi-threading and thus for running asyncronous code without blocking the DOM.</li>
+                <li>How to use Web Workers to run code asyncronously.</li>
+            </ul>
+            <li>More About Ray Tracing</li>
+            <ul>
+                <li>How antialiasing works and how to implement it.</li>
+                <li>How to give objects different materials.</li>
+                <li>How different materials affect light differently.</li>
+                <li>How to implement the different ways that matte, reflective, and refractive materials affect light.</li>
+                <li>How to make a camera more versitile with various features such as position, tilt, rotation, field of view, aperature, and focus distance.</li>
+            </ul>
+        </ul>
     </ul>
 </div>
 

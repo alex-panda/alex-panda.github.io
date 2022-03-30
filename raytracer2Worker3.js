@@ -1,3 +1,6 @@
+let log = safeLogger(1000, false);
+let slog = safeLogger(1000, true);
+
 // ----------------------------------------------------------------------------
 // Constants
 
@@ -21,9 +24,13 @@ class Vec3 {
     get b() { return this.z; }
     set b(newB) { this.z = newB; }
 
+    toString() {
+        return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
+    }
+
     nearZero() {
         // Return true if the vector is close to zero in all dimensions
-        const s = 1 * Math.pow(10, -8);
+        const s = Math.pow(10, -8);
         return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
     }
 
@@ -73,10 +80,6 @@ class Vec3 {
 
     lengthSquared() {
         return (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
-    }
-
-    toString() {
-        return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
 
     plus(vec3) {
@@ -148,6 +151,10 @@ class Ray {
         this.direction = direction;
     }
 
+    toString() {
+        return `<Ray(origin=${this.origin}, direction=${this.direction})>`
+    }
+
     /**
      * Returns the position of this ray at the given time (Number) t
      */
@@ -163,6 +170,10 @@ class HitRecord {
         this.matPtr = null;              // Will be a Material
         this.t = 0;                      // Number
         this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
+    }
+
+    toString() {
+        return `<HitRecord(p=${this.p}, normal=${this.normal}, material=${this.matPtr}, t=${this.t}, frontFace=${this.frontFace})>`;
     }
 
     setFaceNormal(ray, outwardNormal) {
@@ -183,6 +194,10 @@ class Hittable {
     hitBy(ray) {
         throw "hitBy is not Implemented for this hittable object.";
     }
+
+    toString() {
+        return `<Hittable()>`;
+    }
 }
 
 class Sphere extends Hittable {
@@ -191,6 +206,10 @@ class Sphere extends Hittable {
         this.center = center;   // Vec3
         this.r = radius;        // Number
         this.matPtr = material; // Material
+    }
+
+    toString() {
+        return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -226,6 +245,10 @@ class HittableList {
         this.hittables = [];
     }
 
+    toString() {
+        return `<HittableList(hittables=[${this.hittables}])>`;
+    }
+
     add(hittable) {
         this.hittables.push(hittable);
     }
@@ -252,12 +275,20 @@ class Material {
     scatter(rIn, hitRecord) {
         throw Error('Method "scatter" is not implemented for this class.');
     }
+
+    toString() {
+        return `<Material()>`
+    }
 }
 
 class Lambertian extends Material {
     constructor(albedo) {
         super();
-        this.albedo = albedo;
+        this.albedo = albedo; // Color of the Material
+    }
+
+    toString() {
+        return `<Lambertian(albedo=${this.albedo})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -267,51 +298,114 @@ class Lambertian extends Material {
             scatterDirection = hitRecord.normal;
         }
 
-        let scattered = new Ray(hitRecord.p, scatterDirection);
-        let attenuation = this.albedo;
-        return [scattered, attenuation, true];
+        this.scattered = new Ray(hitRecord.p, scatterDirection);
+        this.attenuation = this.albedo;
+        return true;
     }
 }
 
 class Metal extends Material {
     constructor(albedo, fuzz) {
         super();
-        this.albedo = albedo;
+        this.albedo = albedo; // Color of the metal
         this.fuzz = (fuzz < 1) ? fuzz : 1;
+    }
+
+    toString() {
+        return `<Metal(albedo=${this.albedo}, fuzz=${this.fuzz})>`
     }
 
     scatter(rIn, hitRecord) {
         let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
 
-        let scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
-        let attenuation = this.albedo;
-        return [scattered, attenuation, (scattered.direction.dot(hitRecord.normal) > 0)];
+        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
+        this.attenuation = this.albedo;
+        return (this.scattered.direction.dot(hitRecord.normal) > 0);
+    }
+}
+
+class Dialectric extends Material {
+    constructor(indexOfRefraction) {
+        super();
+        this.ir = indexOfRefraction;
+    }
+
+    toString() {
+        return `<Dialectric(indexOfRefraction=${this.ir})>`
+    }
+
+    reflectance(cosine, refIdx) {
+        let r0 = (1 - refIdx) / (1 + refIdx);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * Math.pow((1 - cosine), 5);
+    }
+
+    scatter(rIn, hitRecord) {
+        this.attenuation = new Color(1.0, 1.0, 1.0);
+        let refractionRatio = hitRecord.frontFace ? (1.0 / this.ir) : this.ir;
+
+        let unitDirection = rIn.direction.unitVector();
+        let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
+        let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
+
+        let cannotRefract = (refractionRatio * sinTheta) > 1.0;
+        let direction;
+
+        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) > randomDouble(0.0, 1.0))) {
+            direction = refract(unitDirection, hitRecord.normal, refractionRatio);
+            //direction = reflect(unitDirection, hitRecord.normal);
+        } else {
+            direction = refract(unitDirection, hitRecord.normal, refractionRatio);
+        }
+
+        this.scattered = new Ray(hitRecord.p, direction);
+        return true;
     }
 }
 
 class Camera {
-    constructor() {
-        this.aspectRatio = 16.0 / 9.0;
-        this.viewportHeight = 2.0;
-        this.viewportWidth = this.aspectRatio * this.viewportHeight;
-        this.focalLength = 1.0;
+    constructor(
+            lookfrom,
+            lookat,
+            vup,
+            vfov, // Vertical field of view in degrees
+            aspectRatio,
+            aperture,
+            focusDist
+        ) {
 
-        this.origin = new Vec3(0.0, 0.0, 0.0);
-        this.horizontal = new Vec3(this.viewportWidth, 0.0, 0.0);
-        this.vertical = new Vec3(0.0, this.viewportHeight, 0.0);
-        this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2.0)).minus(this.vertical.divByNum(2.0)).minus(new Vec3(0, 0, this.focalLength));
+        let theta = degreesToRadians(vfov);
+        let h = Math.tan(theta/2);
+        this.viewportHeight = 2.0 * h;
+        this.viewportWidth = aspectRatio * this.viewportHeight;
+
+        this.w = lookfrom.minus(lookat).unitVector();
+        this.u = vup.cross(this.w).unitVector();
+        this.v = this.w.cross(this.u);
+
+        this.origin = lookfrom;
+        this.horizontal = this.u.timesNum(this.viewportWidth).timesNum(focusDist);
+        this.vertical = this.v.timesNum(this.viewportHeight).timesNum(focusDist);
+        this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2)).minus(this.vertical.divByNum(2)).minus(this.w.timesNum(focusDist));
+
+        this.lensRadius = aperture / 2;
     }
 
-    getRay(u, v) {
-        return new Ray(
-            this.origin,
-            this.lowerLeftCorner.plus(this.horizontal.timesNum(u)).plus(this.vertical.timesNum(v))
-        );
+    getRay(s, t) {
+        let rd = randomInUnitDisk().timesNum(this.lensRadius);
+        let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
+
+        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin) .minus(offset);
+        return new Ray(this.origin.plus(offset), direction);
     }
 }
 
 // ----------------------------------------------------------------------------
 // Helper Functions
+
+function degreesToRadians(degrees) {
+    return degrees * (PI / 180);
+}
 
 /**
  * Returns a random decimal value number in [min, max)
@@ -363,8 +457,25 @@ function reflect(v, n) {
     return v.minus(n.timesNum(v.dot(n) * 2));
 }
 
+function refract(uv, n, etaiOverEtat) {
+    let cosTheta = Math.min(uv.negative().dot(n), 1.0);
+    let rOutPerp = uv.plus(n.timesNum(cosTheta)).timesNum(etaiOverEtat);
+    let rOutParallel = n.timesNum(-Math.sqrt(Math.abs(1.0 - rOutPerp.lengthSquared())));
+
+    return rOutPerp.plus(rOutParallel);
+}
+
 function inBox(x, y, left, right, top, bottom) {
     return (left <= x && x <= right && top <= y && y <= bottom);
+}
+
+function randomInUnitDisk() {
+    while (true) {
+        let p = new Vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
+        if (p.lengthSquared() >= 1) continue;
+        return p;
+
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -378,10 +489,8 @@ function rayColor(ray, world, depth) {
     }
 
     if (world.hitBy(ray, 0.001, INFINITY, hitRecord)) {
-        let [scattered, attenuation, scatter] = hitRecord.matPtr.scatter(ray, hitRecord);
-
-        if (scatter) {
-            return rayColor(scattered, world, depth - 1).times(attenuation);
+        if (hitRecord.matPtr.scatter(ray, hitRecord)) {
+            return hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, world, depth - 1));
         }
         return new Color(0.0, 0.0, 0.0);
     }
@@ -404,7 +513,7 @@ function main(renderPattern=null) {
     // Image Dimensions
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
-    const IMAGE_HEIGHT = IMAGE_WIDTH / ASPECT_RATIO;
+    const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
     const SAMPLES_PER_PIXEL = 100;
     const MAX_DEPTH = 50;
 
@@ -417,18 +526,27 @@ function main(renderPattern=null) {
 
     // World
     let world = new HittableList();
+
     let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
-    let materialCenter = new Lambertian(new Color(0.7, 0.3, 0.3));
-    let materialLeft = new Metal(new Color(0.8, 0.8, 0.8), 0.0);
-    let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0.5);
+    let materialCenter = new Lambertian(new Color(0.1, 0.2, 0.5));
+    let materialLeft = new Dialectric(1.5);
+    let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0,0);
 
     world.add(new Sphere(new Point3D(0.0, -100.5, -1.0), 100.0, materialGround));
-    world.add(new Sphere(new Point3D(0.0,  0.0,   -1.0), 0.5, materialCenter));
-    world.add(new Sphere(new Point3D(-1.0, 0.0,   -1.0), 0.5, materialLeft));
-    world.add(new Sphere(new Point3D(1.0,  0.0,   -1.0), 0.5, materialRight));
+    world.add(new Sphere(new Point3D(0.0, 0.0, -1.0), 0.5, materialCenter));
+    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), 0.5, materialLeft));
+    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
+    world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
 
     // Camera
-    const camera = new Camera();
+
+    let lookfrom = new Point3D(-3, 3, 2);
+    let lookat = new Point3D(0, 0, -1);
+    let vup = new Vec3(0, 1, 0);
+    let distToFocus = lookfrom.minus(lookat).length();
+    let aperture = 2.0
+
+    const camera = new Camera(lookfrom, lookat, vup, 20, ASPECT_RATIO, aperture, distToFocus);
 
     // --- Render
 
@@ -440,7 +558,8 @@ function main(renderPattern=null) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
             let r = camera.getRay(u, v);
-            pixelColor.plusEq(rayColor(r, world, MAX_DEPTH));
+            let rayColorRes = rayColor(r, world, MAX_DEPTH);
+            pixelColor.plusEq(rayColorRes);
         }
 
         // Figure out value of the antialiased pixel
@@ -460,8 +579,8 @@ function main(renderPattern=null) {
         // A simple default rendering pattern that renders the image from left
         // to right, column by column
         renderPattern = function* (imageWidth, imageHeight) { 
-            for (let x = 0; x < imageWidth; x++) {
-                for (let y = 0; y < imageHeight; y++) {
+            for (let x = 0; x <= imageWidth; x++) {
+                for (let y = 0; y <= imageHeight; y++) {
                     yield [[x, y]];
                 }
             }
@@ -488,6 +607,7 @@ function main(renderPattern=null) {
         // render the pixels
         for (let pixel of pixels) {
             let [x, y] = pixel;
+
 
             // If a pixel is not in the image then don't render it
             if (inBox(x, y, 0, IMAGE_WIDTH, 0, IMAGE_HEIGHT)) {
@@ -565,8 +685,8 @@ function divImage(numCols, numRows, imageWidth, imageHeight, callback) {
     if (imageWidth < numCols) numCols = imageWidth;
     if (imageHeight < numRows) numRows = imageHeight;
 
-    const boxWidth = Math.floor(imageWidth / numCols);
-    const boxHeight = Math.floor(imageHeight / numRows);
+    const boxWidth = Math.ceil(imageWidth / numCols);
+    const boxHeight = Math.ceil(imageHeight / numRows);
 
     for (let y = 0; y < imageHeight; y += boxHeight) {
         for (let x = 0; x < imageWidth; x += boxWidth) {
@@ -708,4 +828,34 @@ function boxesPattern(numRows, numCols, genTemplate) {
         }
     }
     return boxesPatternGen;
+}
+
+
+
+/**
+ * Helper function that only allows you to log something using it a set number
+ * of times, that way the website does not break because you tried to log something
+ * 100000000000 times because this only lets you log it numTimes number of times before
+ * it does not log anything else
+ */
+function safeLogger(numTimes=10, logToString=false) {
+    function log() {
+        if (numTimes > 0) {
+            if (logToString) {
+                let args = [];
+                for (let arg of arguments) {
+                    args.push(arg.toString());
+                }
+                console.log(...args);
+            } else {
+                console.log(...arguments);
+            }
+            numTimes--;
+        }
+
+        if (arguments.length === 1) {
+            return arguments[0];
+        }
+    }
+    return log;
 }

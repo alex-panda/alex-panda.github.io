@@ -469,7 +469,7 @@ function main(renderPattern) {
      *  can show the updated image to the user.
      */
     function drawImage() {
-        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels]);
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT - 1], newlyRenderedPixels]);
         newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
     }
 

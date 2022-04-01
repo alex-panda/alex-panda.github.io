@@ -38,7 +38,6 @@ if (typeof(Worker) !== undefined) {
                 // There are no more pixels to render after this because the
                 // worker has finished ray tracing so just terminate the
                 // webworker and be done.
-                console.log("here!");
                 w.terminate();
                 return;
             }

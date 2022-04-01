@@ -611,6 +611,7 @@ function main(renderPattern=null) {
         let pixels = ret.value;
 
         if (ret.done) {
+            postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], [], true]);
             break;
         } 
 
@@ -624,7 +625,7 @@ function main(renderPattern=null) {
         }
 
         // Post the pixels to be drawn to the image
-        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels]);
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels, false]);
         newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
     }
 }

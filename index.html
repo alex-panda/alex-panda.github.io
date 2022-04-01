@@ -184,13 +184,13 @@ class Vec3 {
     }
 
     toString() {
-        return `<Vec3(\${this.x}, \${this.y}, \${this.z})>`;
+        return `&ltVec3(\${this.x}, \${this.y}, \${this.z})&gt`;
     }
 
     nearZero() {
         // Return true if the vector is close to zero in all dimensions
         const s = Math.pow(10, -8);
-        return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
+        return ((Math.abs(this.x) &lt s) && (Math.abs(this.y) &lt s) && (Math.abs(this.z) &lt s));
     }
 
     random(min=0.0, max=1.0) {
@@ -300,13 +300,13 @@ class Color extends Vec3 {
     set b(newB) { this.z = newB; }
 
     toString() {
-        return `<Color(\${this.r}, \${this.g}, \${this.b})>`;
+        return `&ltColor(\${this.r}, \${this.g}, \${this.b})&gt`;
     }
 }
 
 class Point3D extends Vec3 {
     toString() {
-        return `<Point3D(\${this.x}, \${this.y}, \${this.z})>`;
+        return `&ltPoint3D(\${this.x}, \${this.y}, \${this.z})&gt`;
     }
 }
 
@@ -323,7 +323,7 @@ class Ray {
     }
 
     toString() {
-        return `<Ray(origin=\${this.origin}, direction=\${this.direction})>`
+        return `&ltRay(origin=\${this.origin}, direction=\${this.direction})&gt`
     }
 
     /**
@@ -344,11 +344,11 @@ class HitRecord {
     }
 
     toString() {
-        return `<HitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})>`;
+        return `&ltHitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})&gt`;
     }
 
     setFaceNormal(ray, outwardNormal) {
-        this.frontFace = ray.direction.dot(outwardNormal) < 0;
+        this.frontFace = ray.direction.dot(outwardNormal) &lt 0;
         this.normal = this.frontFace ? outwardNormal : outwardNormal.negative();
     }
 }
@@ -359,7 +359,7 @@ class Hittable {
     }
 
     toString() {
-        return `<Hittable()>`;
+        return `&ltHittable()&gt`;
     }
 }
 
@@ -372,7 +372,7 @@ class Sphere extends Hittable {
     }
 
     toString() {
-        return `<Sphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})>`;
+        return `&ltSphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})&gt`;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -382,15 +382,15 @@ class Sphere extends Hittable {
         let c = oc.lengthSquared() - (this.r * this.r);
 
         let discriminant = (halfB * halfB) - (a * c);
-        if (discriminant < 0) { return false; }
+        if (discriminant &lt 0) { return false; }
         let sqrtD = Math.sqrt(discriminant);
 
         // find the nearest root that lies in the acceptable range to determine
         //  if the sphere was hit
         let root = (-halfB - sqrtD) / a;
-        if ((root < tMin) || (tMax < root)) {
+        if ((root &lt tMin) || (tMax &lt root)) {
             root = (-halfB + sqrtD) / a;
-            if ((root < tMin) || (tMax < root)) {
+            if ((root &lt tMin) || (tMax &lt root)) {
                 return false;
             }
         }
@@ -411,7 +411,7 @@ class HittableList {
     }
 
     toString() {
-        return `<HittableList(hittables=[\${this.hittables}])>`;
+        return `&ltHittableList(hittables=[\${this.hittables}])&gt`;
     }
 
     add(hittable) {
@@ -439,7 +439,7 @@ class Material {
     }
 
     toString() {
-        return `<Material()>`
+        return `&ltMaterial()&gt`
     }
 }
 
@@ -450,7 +450,7 @@ class Lambertian extends Material {
     }
 
     toString() {
-        return `<Lambertian(albedo=\${this.albedo})>`
+        return `&ltLambertian(albedo=\${this.albedo})&gt`
     }
 
     scatter(rIn, hitRecord) {
@@ -470,11 +470,11 @@ class Metal extends Material {
     constructor(albedo, fuzz) {
         super();
         this.albedo = albedo; // Color of the metal
-        this.fuzz = (fuzz < 1) ? fuzz : 1;
+        this.fuzz = (fuzz &lt 1) ? fuzz : 1;
     }
 
     toString() {
-        return `<Metal(albedo=\${this.albedo}, fuzz=\${this.fuzz})>`
+        return `&ltMetal(albedo=\${this.albedo}, fuzz=\${this.fuzz})&gt`
     }
 
     scatter(rIn, hitRecord) {
@@ -482,7 +482,7 @@ class Metal extends Material {
 
         this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
         this.attenuation = this.albedo;
-        return (this.scattered.direction.dot(hitRecord.normal) > 0);
+        return (this.scattered.direction.dot(hitRecord.normal) &gt 0);
     }
 }
 
@@ -493,7 +493,7 @@ class Dielectric extends Material {
     }
 
     toString() {
-        return `<Dialectric(indexOfRefraction=\${this.ir})>`
+        return `&ltDialectric(indexOfRefraction=\${this.ir})&gt`
     }
 
     reflectance(cosine, refIdx) {
@@ -510,10 +510,10 @@ class Dielectric extends Material {
         let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
         let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
 
-        let cannotRefract = refractionRatio * sinTheta > 1.0;
+        let cannotRefract = refractionRatio * sinTheta &gt 1.0;
         let direction;
 
-        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) > randomDouble(0.0, 1.0))) {
+        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) &gt randomDouble(0.0, 1.0))) {
             direction = reflect(unitDirection, hitRecord.normal);
         } else {
             direction = refract(unitDirection, hitRecord.normal, refractionRatio);
@@ -589,15 +589,15 @@ function randomInt(min=0, max=1.0) {
  * Clamps the value x in the range [min, max]
  */
 function clamp(x, min, max) {
-    if (x < min) return min;
-    if (x > max) return max;
+    if (x &lt min) return min;
+    if (x &gt max) return max;
     return x;
 }
 
 function randomInUnitSphere() {
     while (true) {
         let p = Vec3.prototype.random(-1.0, 1.0);
-        if (p.lengthSquared() >= 1.0) continue;
+        if (p.lengthSquared() &gt= 1.0) continue;
         return p;
     } 
 }
@@ -608,7 +608,7 @@ function randomUnitVector() {
 
 function randomInHemisphere(normal) {
     let inUnitSphere = randomInUnitSphere();
-    if (inUnitSphere.dot(normal) > 0.0) { // In the same hemisphure as the normal
+    if (inUnitSphere.dot(normal) &gt 0.0) { // In the same hemisphure as the normal
         return inUnitSphere;
     } else {
         return inUnitSphere.negative();
@@ -628,13 +628,13 @@ function refract(uv, n, etaiOverEtat) {
 }
 
 function inBox(x, y, left, right, top, bottom) {
-    return (left <= x && x <= right && top <= y && y <= bottom);
+    return (left &lt= x && x &lt= right && top &lt= y && y &lt= bottom);
 }
 
 function randomInUnitDisk() {
     while (true) {
         let p = new Vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
-        if (p.lengthSquared() >= 1) continue;
+        if (p.lengthSquared() &gt= 1) continue;
         return p;
 
     }
@@ -646,7 +646,7 @@ function randomInUnitDisk() {
 function rayColor(ray, world, depth) {
     let hitRecord = new HitRecord();
 
-    if (depth <= 0) {
+    if (depth &lt= 0) {
         return new Color(0.0, 0.0, 0.0);
     }
 
@@ -716,7 +716,7 @@ function main(renderPattern=null) {
         let pixelColor = new Color(0, 0, 0);
 
         // Take a bunch of samples around the pixel to do antialiasing
-        for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
+        for (let s = 0; s &lt SAMPLES_PER_PIXEL; ++s) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
             pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
@@ -739,8 +739,8 @@ function main(renderPattern=null) {
         // A simple default rendering pattern that renders the image from left
         // to right, column by column
         renderPattern = function* (imageWidth, imageHeight) { 
-            for (let x = 0; x <= imageWidth; x++) {
-                for (let y = 0; y <= imageHeight; y++) {
+            for (let x = 0; x &lt= imageWidth; x++) {
+                for (let y = 0; y &lt= imageHeight; y++) {
                     yield [[x, y]];
                 }
             }
@@ -779,7 +779,7 @@ function main(renderPattern=null) {
     }
 }
 
-this.onmessage = (event) => {
+this.onmessage = (event) =&gt {
     main(renderPattern);
 }
 </pre></code>

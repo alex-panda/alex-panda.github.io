@@ -12,7 +12,7 @@ if (typeof(Worker) !== undefined) {
 
         let sizeNotSet = true;
         function drawToCanvas(data) {
-            const [[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels] = data;
+            const [[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels, doneRayTracing] = data;
 
             const canvas = document.querySelector(outCanvasId);
             if (canvas === null) { return; } // No Canvas = don't draw ever again
@@ -32,6 +32,15 @@ if (typeof(Worker) !== undefined) {
                 // Need to inverse y because the image was rendered with the y-axis going up but canvas
                 //  has the y-axis go down
                 context.fillRect(pixX + x, (IMAGE_HEIGHT - pixY) + y, 1, 1);
+            }
+
+            if (doneRayTracing) {
+                // There are no more pixels to render after this because the
+                // worker has finished ray tracing so just terminate the
+                // webworker and be done.
+                console.log("here!");
+                w.terminate();
+                return;
             }
         }
 

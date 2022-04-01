@@ -468,8 +468,8 @@ function main(renderPattern) {
      *  Posts the message so that the JavaScript file that called this Worker
      *  can show the updated image to the user.
      */
-    function drawImage() {
-        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT - 1], newlyRenderedPixels]);
+    function drawImage(lastDraw=false) {
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT - 1], newlyRenderedPixels, lastDraw]);
         newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
     }
 
@@ -500,7 +500,7 @@ function main(renderPattern) {
             renderCnt = 10;
         }
     }
-    drawImage(); // make sure final image is drawn
+    drawImage(true); // make sure final image is drawn
 }
 
 this.onmessage = (data) => {

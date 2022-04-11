@@ -20,9 +20,10 @@ def renderTemplate(file_location:str, search_path:str=HTML_DIR, out_name:str=Non
 
 
 # Render Home Page
-renderTemplate("raytracerPage2.html", out_name="index.html")
+renderTemplate("raytracerPage1.html", out_name="index.html")
 
 # Render Other Pages
 renderTemplate("raytracerPage1.html")
 renderTemplate("raytracerPage2.html")
+renderTemplate("raytracerPage3.html")
 

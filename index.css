@@ -90,4 +90,8 @@ body button {
 #raytracer-main .canvas-area {
   padding: 0px;
 }
+
+#raytracer-main .canvas-area img {
+  border: 1px solid black;
+}
 /*# sourceMappingURL=index.css.map */

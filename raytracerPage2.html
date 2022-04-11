@@ -28,6 +28,7 @@
                     
                     <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
                     <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
+                    <button id="raytracer3-nav" class="nav-btn" type="button">Raytracer Page 3</button>
                     
                 </nav>
             </header>
@@ -82,26 +83,43 @@
     <p>
         The camera improvements made in chapters 11 and 12 allow the user change
         the camera's positon, focal point, orientation, aperature, focus
-        distance, field of view, and change what the point in the cenery the
+        distance, field of view, and change what the point in the scenery the
         camera is looking at. All of these added features allow the user of the
         ray-tracer to use the camera like a proper photographer and take more
         interesting pictures of the scenery, but only a simple demonstration of
         this is shown below.
     </p>
 
+    <p>
+        The following are four renders that are rendered in real time from the
+        moment you open or refresh the page. A picture of each finished render is
+        shown either above or to the left of each current render (depending on the width
+        of your screen) as the current render takes place. The top-most render is from
+        when the renderer could first render shadows, the next render below it is from
+        when the renderer could first handle different materials that could choose to reflect
+        different amounts of light, the third shows off a see-through sphere
+        looked at from a skewed camera angle, and the bottom render is a final
+        render that shows off everything that the renderer could do at this
+        stage of its creation.
+    </p>
+
     <div class="canvas-area center">
+        <img src="./assets/page2-firstRenderWithShadows.PNG" width="400" />
         <canvas id="raytracer-out-canvas1"></canvas>
     </div>
 
     <div class="canvas-area center">
+        <img src="./assets/page2-ThreeSpheresStraightOn.PNG" width="400" />
         <canvas id="raytracer-out-canvas2"></canvas>
     </div>
 
     <div class="canvas-area center">
+        <img src="./assets/page2-3SpheresCameraAngleChange.PNG" width="400" />
         <canvas id="raytracer-out-canvas3"></canvas>
     </div>
 
     <div class="canvas-area center">
+        <img src="./assets/page2-FinalRenderManySpheres.PNG" width="400" />
         <canvas id="raytracer-out-canvas4"></canvas>
     </div>
 

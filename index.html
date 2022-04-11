@@ -14,7 +14,7 @@
         <script type="module" src="index.js" defer></script>
 
         
-<script type="module" src="raytracer2.js" defer></script>
+<script type="module" src="raytracer1.js" defer></script>
 
     </head>
 
@@ -28,6 +28,7 @@
                     
                     <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
                     <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
+                    <button id="raytracer3-nav" class="nav-btn" type="button">Raytracer Page 3</button>
                     
                 </nav>
             </header>
@@ -36,143 +37,108 @@
                 
 <div id="raytracer-main">
     <p>
-        After following chapters 7-12 of "Ray Tracing in One Weekend" by Peter
-        Shirley, I have made various improvements to the raytracer. For starters,
-        I added antialiasing and basic diffusion in chapters 7 and 8, I then added
-        more diffusion materials through the addition of metal materials and refractive glass
-        materials in chapter 9 and 10, as well as a positionable and more configurable
-        camera in chapters 11 and 12.
+        After following the first 6 chapters of "Ray Tracing in One Weekend" by Peter
+        Shirley, I have created a small raytracer capable of rendering spheres in
+        various positions and differing colors. Below, you can see two spheres: one
+        extremely large one colored green and another much smaller one colored
+        based on its surface norms.
     </p>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas"></canvas>
+    </div>
 
     <p>
-        The antialiasing I added in chapter 7 makes curves appear more smooth and
-        edges appear more straight. This is because, without antialiasing, there
-        is only 1 ray of light emitted per pixel, thus making each pixel starkly
-        1 color. If that pixel appears next to another pixel of a different
-        color, as happens when the pixel is on the edge of a green-colored
-        object with a blue background pixel over the edge of the object, you see
-        starkly the contrast between the green pixel and the blue pixel (you see
-        the line created where the green pixel ends and the blue pixel begins).
-        With antialiasing, however, you send 100 (or some arbitrary other
-        number) of rays through the pixel, each one slightly off from the center
-        of the pixel, and then average the colors of the rays. This way some of
-        the rays will hit the edge and others will miss it, thus some will
-        return green and some will return blue. As you then average the colors
-        of the rays, you will make this edge pixel a nice transition pixel
-        between the green pixels of the object and the blue pixels of the
-        background, reducing the outline of each pixel and enhancing the outline
-        of the shape. Antialiasing can be seen in the render below at edges of
-        each shape as the edge pixel transitions between the color of the object
-        the color of whatever is on the other side of the edge of the object.
+        Both of the above spheres (with a blue to white gradient
+        background) were rendered in real time starting from the moment
+        you opened this page of the website.
     </p>
 
-    <p>
-        When I added diffusion in chapters 8-10, I added materials to the
-        objects so that they could have different properties and thus affect the
-        light differently when hit. Diffusion allows materials
-        to scatter almost no light, a bit of light, or almost all light that hits them.
-        This is the difference between the matte grey, brown, and blue spheres below and
-        the reflective metal and gold spheres in the middle render below.
-        Materials can also scatter light in different ways. Some scatter light by reflecting
-        it (like the metal spheres below) and others refract light (like the glass sphere
-        below) by allowing the light ray to pass through the object, but bending it as it
-        does so. 
-    </p>
-
-    <p>
-        The camera improvements made in chapters 11 and 12 allow the user change
-        the camera's positon, focal point, orientation, aperature, focus
-        distance, field of view, and change what the point in the cenery the
-        camera is looking at. All of these added features allow the user of the
-        ray-tracer to use the camera like a proper photographer and take more
-        interesting pictures of the scenery, but only a simple demonstration of
-        this is shown below.
-    </p>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas1"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas2"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas3"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <canvas id="raytracer-out-canvas4"></canvas>
-    </div>
-
+    <p>Here is a small writup on what it took me to get to this point:</p>
     <ul>
         <li>My Goals</li>
-        <ul>
-            <li>Change the website so that it uses an html generator to generate the html pages more easily.</li>
-            <li>Finish chapters 7-12 of the textbook and update the website to reflect the new changes to the raytracer.</li>
-        </ul>
-
+            <ul>
+                <li>Create a website on GitHub Pages.</li>
+                <li>Learn JavaScript enough that I can begin coding the raytracer in JavaScript.</li>
+                <li>Follow the first 6 chapters of "Ray Tracing in 1 Weekend," coding the basic setup for the ray tracer.</li>
+            </ul>
         <li>My Results</li>
-        <ul>
-            <li>I learned python Jinja and used it for html generation of my website.</li>
-            <li>I fixed the async-await issue that was causing the rendering to not be shown until after all of the render was completed.</li>
-            <li>I successully completed chapters 7-12 of the textbook, improving the raytracer by implementing:</li>
             <ul>
-                <li>antialiasing</li>
-                <li>different materials for different objects</li>
-                <ul>
-                    <li>Lambertian material for matte objects</li>
-                    <li>Metal material for metal objects that reflect light to various degrees</li>
-                    <li>Dialectric material for objects that refract light such as glass</li>
-                </ul>
-                <li>improved camera manipulation</li>
-                <ul>
-                    <li>positioning</li>
-                    <li>tilt</li>
-                    <li>rotation</li>
-                    <li>field of view</li>
-                    <li>aperature</li>
-                    <li>aspect ratio</li>
-                    <li>focus distance</li>
-                </ul>
-            </ul>
-        </ul>
+                <li>I created a flatpage website that will work on
+                GitHub Pages.</li>
 
+                <li>I learned JavaScript enough to be able to begin
+                coding the ray tracer in the programming language.</li>
+
+                <li>I followed the first 6 chapters of "Ray Tracing in 1 Weekend" and set up the
+                ray tracer so that it has the basic building blocks and can raytrace simple images.
+                Namely, I set up:</li>
+                    <ul>
+                        <li>a vector class for doing calculations in a 3D space by using 3D points and for representing RGB colors</li>
+                        <li>a camera for looking into the world</li>
+                        <li>an abstract base class for hittable objects so that eventually more than one shape can be put in the ray tracer's world and thus seen in it</li>
+                        <li>a hittable sphere class for representing spheres in the world that can be hit by light rays and thus looked at by the ray tracer</li>
+                        <li>a hittable list so that the ray tracer can handle having multiple objects in the world</li>
+                        <li>a main function that ray traces the image produced by the current world and camera and outputs the result to an HTML canvas for user viewership</li>
+                    </ul>
+            </ul>
         <li>My Work</li>
-        <ul>
-            <li>I spent multiple days figuring out both Jinja and the async-await issue.</li>
-            <li>I also spent multiple days writing the improvements to the ray tracer and then debugging the code afterwards.</li>
-        </ul>
+            <ul>
+                <li>I spent multiple weeks learning JavaScript/HTML/CSS.</li>
+                <li>I spent multiple days trying to build my GitHub Pages website using Python flask as an HTML generator. That did not work out, so now I am using a bunch of flat HTML pages without a generator.</li>
+                <li>It took me multiple days to go through the first 6 chapters of "Ray Tracing in One Weekend," write the code for the ray tracer, and debug the issues my code had.</li>
+            </ul>
         <li>What I Learned</li>
-        <ul>
-            <li>More JavaScript</li>
             <ul>
-                <li>That async-await is DOM-blocking in JavaScript, causing the page to not load until all the rendering is complete even if the rendering is happening asyncronously in the background.</li>
-                <li>That JavaScript has something called Web Workers for multi-threading and thus for running asyncronous code without blocking the DOM.</li>
-                <li>How to use Web Workers to run code asyncronously.</li>
+
+            <li>HTML</li>
+                <ul>
+                    <li>the DOM</li>
+                    <li>how HTML documents are generally formatted</li>
+                    <li>what HTML elements exist</li>
+                    <li>how HTML elements interact with one another</li>
+                </ul>
+
+            <li>CSS</li>
+                <ul>
+                    <li>general layout</li>
+                    <li>selecting classes vs tags vs ids</li>
+                    <li>the styling available for each HTML element</li>
+                    <li>how to position elements using CSS</li>
+                    <li>CSS Grid</li>
+                </ul>
+
+            <li>JavaScript (while I have learned other programming languages before, I had to learn how many things look/work in JavaScript in particular)</li>
+                <ul>
+                <li>classes</li>
+                <li>functions</li>
+                <li>loops</li>
+                <li>conditionals</li>
+                <li>variables/variable scopes</li>
+                <li>asyncronous programming</li>
+                <li>event handling</li>
+                <li>how to access/manipulate HTML elements and the DOM</li>
+                <li>and more</li>
+                </ul>
+
+            <li>How to set up a ray tracer.</li>
+                <ul>
+                    <li>How colors work on the computer.</li>
+                    <li>How to trace a ray and see what it hits in a 3D space.</li>
+                    <li>How to create objects that can be hit by a ray.</li>
+                    <li>How to handle having multiple objects in the ray tracer's world.</li>
+                    <li>How to color a pixel based on what a ray from the pixel into the world hit.</li>
+                    <li>How to differentiate hitting the frontside or backside of an object with a ray.</li>
+                </ul>
+
             </ul>
-            <li>More About Ray Tracing</li>
-            <ul>
-                <li>How antialiasing works and how to implement it.</li>
-                <li>How to give objects different materials.</li>
-                <li>How different materials affect light differently.</li>
-                <li>How to implement the different ways that matte, reflective, and refractive materials affect light.</li>
-                <li>How to make a camera more versitile with various features such as position, tilt, rotation, field of view, aperature, and focus distance.</li>
-            </ul>
-        </ul>
     </ul>
 
     <p>
-        Here is the source code as it was at the end of this stage of development:
+        Below is the source code for the raytracer that rendered the above image:
     </p>
 
-<code><pre>
-// ----------------------------------------------------------------------------
-// Constants
-
-const INFINITY = Infinity;
-const PI = 3.1415926535897932385;
-
+    <code><pre>
 // ----------------------------------------------------------------------------
 // Helper Classes
 
@@ -183,26 +149,19 @@ class Vec3 {
         this.z = z;
     }
 
-    toString() {
-        return `&ltVec3(\${this.x}, \${this.y}, \${this.z})&gt`;
-    }
-
-    nearZero() {
-        // Return true if the vector is close to zero in all dimensions
-        const s = Math.pow(10, -8);
-        return ((Math.abs(this.x) &lt s) && (Math.abs(this.y) &lt s) && (Math.abs(this.z) &lt s));
-    }
-
-    random(min=0.0, max=1.0) {
-        return new this.constructor(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
-    }
+    get r() { return this.x; }
+    set r(newR) { this.x = newR; }
+    get g() { return this.y; }
+    set g(newG) { this.y = newG; }
+    get b() { return this.z; }
+    set b(newB) { this.z = newB; }
 
     copy() {
-        return new this.constructor(this.x, this.y, this.z);
+        return new Vec3(this.x, this.y, this.z);
     }
 
     negative() {
-        return new this.constructor(-this.x, -this.y, -this.z);
+        return new Vec3(-this.x, -this.y, -this.z);
     }
 
     minusEq(vec3) {
@@ -241,36 +200,49 @@ class Vec3 {
         return (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
     }
 
+    toString() {
+        return \`&ltVec3(\${this.x}, \${this.y}, \${this.z})&gt\`;
+    }
+
+    toColorString() {
+        return \`rgb(\${Math.floor(255.99 * this.r)},
+                \${Math.floor(255.99 * this.g)}, \${Math.floor(255.99 * this.b)})\`
+    }
+
     plus(vec3) {
-        return new this.constructor((this.x + vec3.x), (this.y + vec3.y), (this.z + vec3.z));
+        return new Vec3((this.x + vec3.x), (this.y + vec3.y), (this.z + vec3.z));
     }
 
     plusNum(num) {
-        return new this.constructor((this.x + num), (this.y + num), (this.z + num));
+        return new Vec3((this.x + num), (this.y + num), (this.z + num));
     }
 
     minus(vec3) {
-        return new this.constructor((this.x - vec3.x), (this.y - vec3.y), (this.z - vec3.z));
+        return new Vec3((this.x - vec3.x), (this.y - vec3.y), (this.z - vec3.z));
     }
 
     minusNum(num) {
-        return new this.constructor((this.x - num), (this.y - num), (this.z - num));
+        return new Vec3((this.x - num), (this.y - num), (this.z - num));
+    }
+
+    minusedByNum(num) {
+        return new Vec3((num - this.x), (num - this.y), (num - this.z));
     }
 
     times(vec3) {
-        return new this.constructor((this.x * vec3.x), (this.y * vec3.y), (this.z * vec3.z));
+        return new Vec3((this.x * vec3.x), (this.y * vec3.y), (this.z * vec3.z));
     }
 
     timesNum(num) {
-        return new this.constructor((this.x * num), (this.y * num), (this.z * num));
+        return new Vec3((this.x * num), (this.y * num), (this.z * num));
     }
     
     divBy(vec3) {
-        return new this.constructor((this.x / vec3.x), (this.y / vec3.y), (this.z / vec3.z));
+        return new Vec3((this.x / vec3.x), (this.y /vec3.y), (this.z /vec3.z));
     }
 
     divByNum(num) {
-        return new this.constructor((this.x / num), (this.y / num), (this.z / num));
+        return new Vec3((this.x / num), (this.y / num), (this.z / num));
     }
 
     dot(vec3) {
@@ -278,10 +250,10 @@ class Vec3 {
     }
 
     cross(vec3) {
-        return new this.constructor(
-            (this.y * vec3.z) - (this.z * vec3.y),
-            (this.z * vec3.x) - (this.x * vec3.z),
-            (this.x * vec3.y) - (this.y * vec3.x)
+        return new Vec3(
+            this.y * vec3.z - this.z * vec3.y,
+            this.z * vec3.x - this.x * vec3.z,
+            this.x * vec3.y - this.y * vec3.x
         );
     }
 
@@ -291,24 +263,8 @@ class Vec3 {
 }
 
 // Vec3 aliases
-class Color extends Vec3 {
-    get r() { return this.x; }
-    set r(newR) { this.x = newR; }
-    get g() { return this.y; }
-    set g(newG) { this.y = newG; }
-    get b() { return this.z; }
-    set b(newB) { this.z = newB; }
-
-    toString() {
-        return `&ltColor(\${this.r}, \${this.g}, \${this.b})&gt`;
-    }
-}
-
-class Point3D extends Vec3 {
-    toString() {
-        return `&ltPoint3D(\${this.x}, \${this.y}, \${this.z})&gt`;
-    }
-}
+const Color = Vec3;
+const Point3D = Vec3;
 
 const WHITE = new Color(1.0, 1.0, 1.0);
 const BLACK = new Color(0.0, 0.0, 0.0);
@@ -317,13 +273,9 @@ const BLACK = new Color(0.0, 0.0, 0.0);
  * A class that represents a ray of light.
  */
 class Ray {
-    constructor(origin, direction) {
+    constructor({origin, direction}) {
         this.origin = origin;
         this.direction = direction;
-    }
-
-    toString() {
-        return `&ltRay(origin=\${this.origin}, direction=\${this.direction})&gt`
     }
 
     /**
@@ -335,21 +287,27 @@ class Ray {
 }
 
 class HitRecord {
-    constructor() {
-        this.p = null;      // Point3D
-        this.normal = null; // Vec3
-        this.matPtr = null; // Will be a Material
-        this.t = 0;         // Number
-        this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
-    }
+    constructor({}={}) {
+        this.p = new Point3D(0, 0, 0);   // Point3D
+        this.normal = new Vec3(0, 0, 0); // Vec3
+        this.t = 0;                      // Number
 
-    toString() {
-        return `&ltHitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})&gt`;
+        // bool, true if this record represents the face of an object facing
+        // towards the source of the arry or false if this represents the hit of
+        // a face facing away from the source of the ray
+        this.frontFace;
     }
 
     setFaceNormal(ray, outwardNormal) {
         this.frontFace = ray.direction.dot(outwardNormal) &lt 0;
         this.normal = this.frontFace ? outwardNormal : outwardNormal.negative();
+    }
+
+    become(hitRecord) {
+        this.p = hitRecord.p;
+        this.normal = hitRecord.normal;
+        this.t = hitRecord.t;
+        this.frontFace = hitRecord.frontFace;
     }
 }
 
@@ -357,22 +315,13 @@ class Hittable {
     hitBy(ray) {
         throw "hitBy is not Implemented for this hittable object.";
     }
-
-    toString() {
-        return `&ltHittable()&gt`;
-    }
 }
 
 class Sphere extends Hittable {
-    constructor(center, radius, material) {
+    constructor({center, radius}={}) {
         super();
-        this.center = center;   // Vec3
-        this.r = radius;        // Number
-        this.matPtr = material; // Material
-    }
-
-    toString() {
-        return `&ltSphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})&gt`;
+        this.center = center; // Vec3
+        this.r = radius; // Number
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -383,278 +332,61 @@ class Sphere extends Hittable {
 
         let discriminant = (halfB * halfB) - (a * c);
         if (discriminant &lt 0) { return false; }
-        let sqrtD = Math.sqrt(discriminant);
+        let sqrtd = Math.sqrt(discriminant);
 
-        // find the nearest root that lies in the acceptable range to determine
-        //  if the sphere was hit
-        let root = (-halfB - sqrtD) / a;
+        // find the nearest root that lies in the acceptable range.
+        let root = (-halfB - sqrtd) / a;
         if ((root &lt tMin) || (tMax &lt root)) {
-            root = (-halfB + sqrtD) / a;
+            let root = (-halfB + sqrtd) / a;
             if ((root &lt tMin) || (tMax &lt root)) {
                 return false;
             }
         }
-
         hitRecord.t = root;
         hitRecord.p = ray.at(hitRecord.t);
         let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
         hitRecord.setFaceNormal(ray, outwardNormal);
-        hitRecord.matPtr = this.matPtr;
 
         return true;
     }
 }
 
 class HittableList {
-    constructor() {
+    constructor({}={}) {
         this.hittables = [];
-    }
-
-    toString() {
-        return `&ltHittableList(hittables=[\${this.hittables}])&gt`;
-    }
-
-    add(hittable) {
-        this.hittables.push(hittable);
     }
     
     hitBy(ray, tMin, tMax, hitRecord) {
+        let tempHitRecord = new HitRecord();
+
         let hitAnything = false;
         let closestSoFar = tMax;
 
-        for (let hittable of this.hittables) {
-            if (hittable.hitBy(ray, tMin, closestSoFar, hitRecord)) {
+        this.hittables.forEach((hittable) =&gt {
+            if (hittable.hitBy(ray, tMin, closestSoFar, tempHitRecord)) {
                 hitAnything = true;
-                closestSoFar = hitRecord.t;
+                closestSoFar = tempHitRecord.t;
+                hitRecord.become(tempHitRecord);
             }
-        }
+        });
 
         return hitAnything;
     }
 }
 
-class Material {
-    scatter(rIn, hitRecord) {
-        throw Error('Method "scatter" is not implemented for this class.');
-    }
-
-    toString() {
-        return `&ltMaterial()&gt`
-    }
-}
-
-class Lambertian extends Material {
-    constructor(albedo) {
-        super();
-        this.albedo = albedo; // Color of the Material
-    }
-
-    toString() {
-        return `&ltLambertian(albedo=\${this.albedo})&gt`
-    }
-
-    scatter(rIn, hitRecord) {
-        let scatterDirection = hitRecord.normal.plus(randomUnitVector());
-
-        if (scatterDirection.nearZero()) {
-            scatterDirection = hitRecord.normal;
-        }
-
-        this.scattered = new Ray(hitRecord.p, scatterDirection);
-        this.attenuation = this.albedo;
-        return true;
-    }
-}
-
-class Metal extends Material {
-    constructor(albedo, fuzz) {
-        super();
-        this.albedo = albedo; // Color of the metal
-        this.fuzz = (fuzz &lt 1) ? fuzz : 1;
-    }
-
-    toString() {
-        return `&ltMetal(albedo=\${this.albedo}, fuzz=\${this.fuzz})&gt`
-    }
-
-    scatter(rIn, hitRecord) {
-        let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
-
-        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
-        this.attenuation = this.albedo;
-        return (this.scattered.direction.dot(hitRecord.normal) &gt 0);
-    }
-}
-
-class Dielectric extends Material {
-    constructor(indexOfRefraction) {
-        super();
-        this.ir = indexOfRefraction;
-    }
-
-    toString() {
-        return `&ltDialectric(indexOfRefraction=\${this.ir})&gt`
-    }
-
-    reflectance(cosine, refIdx) {
-        let r0 = (1 - refIdx) / (1 + refIdx);
-        r0 = r0 * r0;
-        return r0 + (1 - r0) * Math.pow((1 - cosine), 5);
-    }
-
-    scatter(rIn, hitRecord) {
-        this.attenuation = new Color(1.0, 1.0, 1.0);
-        let refractionRatio = hitRecord.frontFace ? (1.0 / this.ir) : this.ir;
-
-        let unitDirection = rIn.direction.unitVector();
-        let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
-        let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
-
-        let cannotRefract = refractionRatio * sinTheta &gt 1.0;
-        let direction;
-
-        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) &gt randomDouble(0.0, 1.0))) {
-            direction = reflect(unitDirection, hitRecord.normal);
-        } else {
-            direction = refract(unitDirection, hitRecord.normal, refractionRatio);
-        }
-
-        this.scattered = new Ray(hitRecord.p, direction);
-
-        return true;
-    }
-}
-
-class Camera {
-    constructor(
-            lookfrom,
-            lookat,
-            vup,
-            vfov, // Vertical field of view in degrees
-            aspectRatio,
-            aperture,
-            focusDist
-        ) {
-
-        let theta = degreesToRadians(vfov);
-        let h = Math.tan(theta/2);
-        this.viewportHeight = 2.0 * h;
-        this.viewportWidth = aspectRatio * this.viewportHeight;
-
-        this.w = lookfrom.minus(lookat).unitVector();
-        this.u = vup.cross(this.w).unitVector();
-        this.v = this.w.cross(this.u);
-
-        this.origin = lookfrom;
-        this.horizontal = this.u.timesNum(this.viewportWidth).timesNum(focusDist);
-        this.vertical = this.v.timesNum(this.viewportHeight).timesNum(focusDist);
-        this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2)).minus(this.vertical.divByNum(2)).minus(this.w.timesNum(focusDist));
-
-        this.lensRadius = aperture / 2;
-    }
-
-    getRay(s, t) {
-        let rd = randomInUnitDisk().timesNum(this.lensRadius);
-        let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
-
-        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin).minus(offset);
-        return new Ray(this.origin.plus(offset), direction);
-    }
-}
-
 // ----------------------------------------------------------------------------
-// Helper Functions
+// Constants
 
-function degreesToRadians(degrees) {
-    return degrees * (PI / 180);
-}
-
-/**
- * Returns a random decimal value number in [min, max)
- * 
- * If neither min nor max are specified, the range is assumed to be [0, 1)
- */
-function randomDouble(min=0.0, max=1.0) {
-    return (min + ((max - min) * Math.random()));
-}
-
-/**
- * Returns a random integer value in [min, max]
- */
-function randomInt(min=0, max=1.0) {
-    return Math.round(randomDouble(min, max));
-}
-
-/**
- * Clamps the value x in the range [min, max]
- */
-function clamp(x, min, max) {
-    if (x &lt min) return min;
-    if (x &gt max) return max;
-    return x;
-}
-
-function randomInUnitSphere() {
-    while (true) {
-        let p = Vec3.prototype.random(-1.0, 1.0);
-        if (p.lengthSquared() &gt= 1.0) continue;
-        return p;
-    } 
-}
-
-function randomUnitVector() {
-    return randomInUnitSphere().unitVector();
-}
-
-function randomInHemisphere(normal) {
-    let inUnitSphere = randomInUnitSphere();
-    if (inUnitSphere.dot(normal) &gt 0.0) { // In the same hemisphure as the normal
-        return inUnitSphere;
-    } else {
-        return inUnitSphere.negative();
-    }
-}
-
-function reflect(v, n) {
-    return v.minus(n.timesNum(v.dot(n) * 2));
-}
-
-function refract(uv, n, etaiOverEtat) {
-    let cosTheta = Math.min(uv.negative().dot(n), 1.0);
-    const rOutPerp = uv.plus(n.timesNum(cosTheta)).timesNum(etaiOverEtat);
-    const rOutParallel = n.timesNum(-Math.sqrt(Math.abs(1.0 - rOutPerp.lengthSquared())));
-
-    return rOutPerp.plus(rOutParallel);
-}
-
-function inBox(x, y, left, right, top, bottom) {
-    return (left &lt= x && x &lt= right && top &lt= y && y &lt= bottom);
-}
-
-function randomInUnitDisk() {
-    while (true) {
-        let p = new Vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
-        if (p.lengthSquared() &gt= 1) continue;
-        return p;
-
-    }
-}
+const INFINITY = Infinity;
+const PI = 3.1415926535897932385;
 
 // ----------------------------------------------------------------------------
 // Render
 
-function rayColor(ray, world, depth) {
+function rayColor(ray, world) {
     let hitRecord = new HitRecord();
-
-    if (depth &lt= 0) {
-        return new Color(0.0, 0.0, 0.0);
-    }
-
-    if (world.hitBy(ray, 0.001, Infinity, hitRecord)) {
-        if (hitRecord.matPtr.scatter(ray, hitRecord)) {
-            return hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, world, depth - 1));
-        }
-        return new Color(0.0, 0.0, 0.0);
+    if (world.hitBy(ray, 0, INFINITY, hitRecord)) {
+        return ((hitRecord.normal.plus(WHITE)).timesNum(0.5));
     }
 
     // Background
@@ -670,119 +402,86 @@ function rayColor(ray, world, depth) {
  * Uses async so that the rendering is non-blocking and thus the internet
  * browser will not seize up.
  */
-function main(renderPattern=null) {
+async function main(canvas) {
+    if (canvas === undefined) {
+        return;
+    }
 
-    // Image Dimensions
-    const ASPECT_RATIO = 16.0 / 9.0;
-    const IMAGE_WIDTH = 400.0;
-    const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 100;
-    const MAX_DEPTH = 50;
-
-    const newlyRenderedPixels = [];
+    const context = canvas.getContext('2d');
 
     // Helper Function that writes a pixel to the context
-    function writePixel(imageX, imageY, r, g, b) {
-        newlyRenderedPixels.push([imageX, imageY, [r, g, b]]);
+    function writePixel(imageX, imageY, color) {
+        context.fillStyle = color;
+        context.fillRect(imageX, imageY, 1, 1); // draw the pixel
     }
+
+    // Image
+    const ASPECT_RATIO = 16.0 / 9.0;
+    const IMAGE_WIDTH = 400.0;
+    const IMAGE_HEIGHT = IMAGE_WIDTH / ASPECT_RATIO;
+
+    // Make sure that the canvas is the correct width and height
+    canvas.width = IMAGE_WIDTH;
+    canvas.height = IMAGE_HEIGHT;
 
     // World
     let world = new HittableList();
-
-    let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
-    let materialCenter = new Lambertian(new Color(0.1, 0.2, 0.5));
-    let materialLeft = new Dielectric(1.5);
-    let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0,0);
-
-    world.add(new Sphere(new Point3D(0.0, -100.5, -1.0), 100.0, materialGround));
-    world.add(new Sphere(new Point3D(0.0, 0.0, -1.0), 0.5, materialCenter));
-    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), 0.5, materialLeft));
-    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
-    world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
+    world.hittables.push(new Sphere({center:new Point3D(0, 0, -1), radius:0.5}));
+    world.hittables.push(new Sphere({center:new Point3D(0, -100.5, -1), radius:100}));
 
     // Camera
+    const viewportHeight = 2.0;
+    const viewportWidth = 2.0 * viewportHeight;
+    const focalLength = 1.0;
 
-    let lookfrom = new Point3D(-4, 1, 2);
-    let lookat = new Point3D(0, 0, -1);
-    let vup = new Vec3(0, 1, 0);
-    let distToFocus = lookfrom.minus(lookat).length();
-    let aperture = 1.0
-
-    const camera = new Camera(lookfrom, lookat, vup, 20, ASPECT_RATIO, aperture, distToFocus);
+    const origin = new Point3D(0.0, 0.0, 0.0);
+    const horizontal = new Vec3(viewportWidth, 0.0, 0.0);
+    const vertical = new Vec3(0.0, viewportHeight, 0.0);
+    const lowerLeftCorner = origin.minus(horizontal.divByNum(2.0))
+            .minus(vertical.divByNum(2.0)).minus(new Vec3(0, 0, focalLength));
 
     // --- Render
 
-    function renderPixel(x, y) {
-        let pixelColor = new Color(0, 0, 0);
+    // Clear the canvas
+    context.save();
+    context.fillStyle = "white";
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.restore();
 
-        // Take a bunch of samples around the pixel to do antialiasing
-        for (let s = 0; s &lt SAMPLES_PER_PIXEL; ++s) {
-            let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
-            let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
-            pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
+    /**
+     * Renders a row of pixels of the picture.
+     */
+    async function rowColors(y) {
+        y = y + 1;
+        let colors = [];
+        for (let x = 0; x &lt IMAGE_WIDTH; ++x) {
+            let u = x / (IMAGE_WIDTH - 1);
+            let v = y / (IMAGE_HEIGHT - 1);
+            let ray = new Ray({
+                origin:origin,
+                direction:lowerLeftCorner.plus(horizontal.timesNum(u))
+                        .plus(vertical.timesNum(v))
+            });
+            let raycolor = rayColor(ray, world).toColorString();
+
+            // Have to do IMAGE_HEIGHT - y because raytracer assumes that
+            // positive y goes upward, but on canvas it goes downward
+            writePixel(x, IMAGE_HEIGHT - y, raycolor);
         }
-
-        // Figure out value of the antialiased pixel
-        let [r, g, b] = [pixelColor.r, pixelColor.g, pixelColor.b];
-
-        // Divide the color by the number of samples and gamma-correct for
-        // gamma=2.0
-        const scale = 1.0 / SAMPLES_PER_PIXEL;
-        r = Math.sqrt(r * scale);
-        g = Math.sqrt(g * scale);
-        b = Math.sqrt(b * scale);
-
-        writePixel(x, y, 256 * clamp(r, 0.0, 1.0), 256 * clamp(g, 0.0, 1.0), 256 * clamp(b, 0.0, 1.0));
+        return colors;
     }
 
-    if (!(renderPattern instanceof Function)) {
-        // A simple default rendering pattern that renders the image from left
-        // to right, column by column
-        renderPattern = function* (imageWidth, imageHeight) { 
-            for (let x = 0; x &lt= imageWidth; x++) {
-                for (let y = 0; y &lt= imageHeight; y++) {
-                    yield [[x, y]];
-                }
-            }
-        }
+    let rows = [];
+    // Use async to calculate each row
+    for (let y = IMAGE_HEIGHT - 1; y &gt= 0; --y) {
+        rows.push(rowColors(y));
     }
 
-    // A The function takes in the width and height of the image and will be continually
-    //  called to get a list of [x, y] values to be rendered before posting the newly-drawn
-    //  pixels
-    const renderPointsGen = renderPattern(IMAGE_WIDTH, IMAGE_HEIGHT);
-
-    // Render the image
-    while (true) {
-
-        // Get next batch of pixel [x, y] coords to be rendered
-        let ret = renderPointsGen.next();
-
-        let pixels = ret.value;
-
-        if (ret.done) {
-            break;
-        } 
-
-        // render the pixels
-        for (let [x, y] of pixels) {
-
-            // If a pixel is not in the image then don't render it
-            if (inBox(x, y, 0, IMAGE_WIDTH, 0, IMAGE_HEIGHT)) {
-                renderPixel(x, y);
-            }
-        }
-
-        // Post the pixels to be drawn to the image
-        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels]);
-        newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
-    }
+    // Make this function wait asyncronously for every pixel to be drawn before ending
+    await Promise.all(rows);
 }
+    </pre></code>
 
-this.onmessage = (event) =&gt {
-    main(renderPattern);
-}
-</pre></code>
 </div>
 
             </main>

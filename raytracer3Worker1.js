@@ -1,160 +1,6 @@
-{% extends "./base.html" %}
+let log = safeLogger(1000, false);
+let slog = safeLogger(1000, true);
 
-{% block js_head %}
-<script type="module" src="raytracer2.js" defer></script>
-{% endblock %}
-
-{% block main %}
-<div id="raytracer-main">
-    <p>
-        After following chapters 7-12 of "Ray Tracing in One Weekend" by Peter
-        Shirley, I have made various improvements to the raytracer. For starters,
-        I added antialiasing and basic diffusion in chapters 7 and 8, I then added
-        more diffusion materials through the addition of metal materials and refractive glass
-        materials in chapter 9 and 10, as well as a positionable and more configurable
-        camera in chapters 11 and 12.
-    </p>
-
-    <p>
-        The antialiasing I added in chapter 7 makes curves appear more smooth and
-        edges appear more straight. This is because, without antialiasing, there
-        is only 1 ray of light emitted per pixel, thus making each pixel starkly
-        1 color. If that pixel appears next to another pixel of a different
-        color, as happens when the pixel is on the edge of a green-colored
-        object with a blue background pixel over the edge of the object, you see
-        starkly the contrast between the green pixel and the blue pixel (you see
-        the line created where the green pixel ends and the blue pixel begins).
-        With antialiasing, however, you send 100 (or some arbitrary other
-        number) of rays through the pixel, each one slightly off from the center
-        of the pixel, and then average the colors of the rays. This way some of
-        the rays will hit the edge and others will miss it, thus some will
-        return green and some will return blue. As you then average the colors
-        of the rays, you will make this edge pixel a nice transition pixel
-        between the green pixels of the object and the blue pixels of the
-        background, reducing the outline of each pixel and enhancing the outline
-        of the shape. Antialiasing can be seen in the render below at edges of
-        each shape as the edge pixel transitions between the color of the object
-        the color of whatever is on the other side of the edge of the object.
-    </p>
-
-    <p>
-        When I added diffusion in chapters 8-10, I added materials to the
-        objects so that they could have different properties and thus affect the
-        light differently when hit. Diffusion allows materials
-        to scatter almost no light, a bit of light, or almost all light that hits them.
-        This is the difference between the matte grey, brown, and blue spheres below and
-        the reflective metal and gold spheres in the middle render below.
-        Materials can also scatter light in different ways. Some scatter light by reflecting
-        it (like the metal spheres below) and others refract light (like the glass sphere
-        below) by allowing the light ray to pass through the object, but bending it as it
-        does so. 
-    </p>
-
-    <p>
-        The camera improvements made in chapters 11 and 12 allow the user change
-        the camera's positon, focal point, orientation, aperature, focus
-        distance, field of view, and change what the point in the scenery the
-        camera is looking at. All of these added features allow the user of the
-        ray-tracer to use the camera like a proper photographer and take more
-        interesting pictures of the scenery, but only a simple demonstration of
-        this is shown below.
-    </p>
-
-    <p>
-        The following are four renders that are rendered in real time from the
-        moment you open or refresh the page. A picture of each finished render is
-        shown either above or to the left of each current render (depending on the width
-        of your screen) as the current render takes place. The top-most render is from
-        when the renderer could first render shadows, the next render below it is from
-        when the renderer could first handle different materials that could choose to reflect
-        different amounts of light, the third shows off a see-through sphere
-        looked at from a skewed camera angle, and the bottom render is a final
-        render that shows off everything that the renderer could do at this
-        stage of its creation.
-    </p>
-
-    <div class="canvas-area center">
-        <img src="./assets/page2-firstRenderWithShadows.PNG" width="400" />
-        <canvas id="raytracer-out-canvas1"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page2-ThreeSpheresStraightOn.PNG" width="400" />
-        <canvas id="raytracer-out-canvas2"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page2-3SpheresCameraAngleChange.PNG" width="400" />
-        <canvas id="raytracer-out-canvas3"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page2-FinalRenderManySpheres.PNG" width="400" />
-        <canvas id="raytracer-out-canvas4"></canvas>
-    </div>
-
-    <ul>
-        <li>My Goals</li>
-        <ul>
-            <li>Change the website so that it uses an html generator to generate the html pages more easily.</li>
-            <li>Finish chapters 7-12 of the textbook and update the website to reflect the new changes to the raytracer.</li>
-        </ul>
-
-        <li>My Results</li>
-        <ul>
-            <li>I learned python Jinja and used it for html generation of my website.</li>
-            <li>I fixed the async-await issue that was causing the rendering to not be shown until after all of the render was completed.</li>
-            <li>I successully completed chapters 7-12 of the textbook, improving the raytracer by implementing:</li>
-            <ul>
-                <li>antialiasing</li>
-                <li>different materials for different objects</li>
-                <ul>
-                    <li>Lambertian material for matte objects</li>
-                    <li>Metal material for metal objects that reflect light to various degrees</li>
-                    <li>Dialectric material for objects that refract light such as glass</li>
-                </ul>
-                <li>improved camera manipulation</li>
-                <ul>
-                    <li>positioning</li>
-                    <li>tilt</li>
-                    <li>rotation</li>
-                    <li>field of view</li>
-                    <li>aperature</li>
-                    <li>aspect ratio</li>
-                    <li>focus distance</li>
-                </ul>
-            </ul>
-        </ul>
-
-        <li>My Work</li>
-        <ul>
-            <li>I spent multiple days figuring out both Jinja and the async-await issue.</li>
-            <li>I also spent multiple days writing the improvements to the ray tracer and then debugging the code afterwards.</li>
-        </ul>
-        <li>What I Learned</li>
-        <ul>
-            <li>More JavaScript</li>
-            <ul>
-                <li>That async-await is DOM-blocking in JavaScript, causing the page to not load until all the rendering is complete even if the rendering is happening asyncronously in the background.</li>
-                <li>That JavaScript has something called Web Workers for multi-threading and thus for running asyncronous code without blocking the DOM.</li>
-                <li>How to use Web Workers to run code asyncronously.</li>
-            </ul>
-            <li>More About Ray Tracing</li>
-            <ul>
-                <li>How antialiasing works and how to implement it.</li>
-                <li>How to give objects different materials.</li>
-                <li>How different materials affect light differently.</li>
-                <li>How to implement the different ways that matte, reflective, and refractive materials affect light.</li>
-                <li>How to make a camera more versitile with various features such as position, tilt, rotation, field of view, aperature, and focus distance.</li>
-            </ul>
-        </ul>
-    </ul>
-
-    <p>
-        Here is the source code as it was at the end of this stage of development:
-    </p>
-
-<code><pre>
 // ----------------------------------------------------------------------------
 // Constants
 
@@ -172,13 +18,13 @@ class Vec3 {
     }
 
     toString() {
-        return `&ltVec3(\${this.x}, \${this.y}, \${this.z})&gt`;
+        return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
 
     nearZero() {
         // Return true if the vector is close to zero in all dimensions
         const s = Math.pow(10, -8);
-        return ((Math.abs(this.x) &lt s) && (Math.abs(this.y) &lt s) && (Math.abs(this.z) &lt s));
+        return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
     }
 
     random(min=0.0, max=1.0) {
@@ -288,13 +134,13 @@ class Color extends Vec3 {
     set b(newB) { this.z = newB; }
 
     toString() {
-        return `&ltColor(\${this.r}, \${this.g}, \${this.b})&gt`;
+        return `<Color(${this.r}, ${this.g}, ${this.b})>`;
     }
 }
 
 class Point3D extends Vec3 {
     toString() {
-        return `&ltPoint3D(\${this.x}, \${this.y}, \${this.z})&gt`;
+        return `<Point3D(${this.x}, ${this.y}, ${this.z})>`;
     }
 }
 
@@ -305,13 +151,14 @@ const BLACK = new Color(0.0, 0.0, 0.0);
  * A class that represents a ray of light.
  */
 class Ray {
-    constructor(origin, direction) {
+    constructor(origin, direction, time=0.0) {
         this.origin = origin;
         this.direction = direction;
+        this.time = time; // The ONE time at which this Ray exists
     }
 
     toString() {
-        return `&ltRay(origin=\${this.origin}, direction=\${this.direction})&gt`
+        return `<Ray(origin=${this.origin}, direction=${this.direction})>`
     }
 
     /**
@@ -332,11 +179,11 @@ class HitRecord {
     }
 
     toString() {
-        return `&ltHitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})&gt`;
+        return `<HitRecord(p=${this.p}, normal=${this.normal}, material=${this.matPtr}, t=${this.t}, frontFace=${this.frontFace})>`;
     }
 
     setFaceNormal(ray, outwardNormal) {
-        this.frontFace = ray.direction.dot(outwardNormal) &lt 0;
+        this.frontFace = ray.direction.dot(outwardNormal) < 0;
         this.normal = this.frontFace ? outwardNormal : outwardNormal.negative();
     }
 }
@@ -347,7 +194,7 @@ class Hittable {
     }
 
     toString() {
-        return `&ltHittable()&gt`;
+        return `<Hittable()>`;
     }
 }
 
@@ -360,7 +207,7 @@ class Sphere extends Hittable {
     }
 
     toString() {
-        return `&ltSphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})&gt`;
+        return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -370,15 +217,15 @@ class Sphere extends Hittable {
         let c = oc.lengthSquared() - (this.r * this.r);
 
         let discriminant = (halfB * halfB) - (a * c);
-        if (discriminant &lt 0) { return false; }
+        if (discriminant < 0) { return false; }
         let sqrtD = Math.sqrt(discriminant);
 
         // find the nearest root that lies in the acceptable range to determine
         //  if the sphere was hit
         let root = (-halfB - sqrtD) / a;
-        if ((root &lt tMin) || (tMax &lt root)) {
+        if ((root < tMin) || (tMax < root)) {
             root = (-halfB + sqrtD) / a;
-            if ((root &lt tMin) || (tMax &lt root)) {
+            if ((root < tMin) || (tMax < root)) {
                 return false;
             }
         }
@@ -393,13 +240,58 @@ class Sphere extends Hittable {
     }
 }
 
+class MovingSphere extends Hittable {
+    constructor(center0, center1, time0, time1, radius, material) {
+        super();
+        this.center0 = center0; // Vec3
+        this.center1 = center1; // Vec3
+        this.time0 = time0;     // Number
+        this.time1 = time1;     // Number
+        this.r = radius;   // Number
+        this.matPtr = material; // Material
+    }
+
+    center(time) {
+        return this.center0.plus(this.center1.minus(this.center0).timesNum((time - this.time0) / (this.time1 - this.time0)));
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let oc = ray.origin.minus(this.center(ray.time));
+        let a = ray.direction.lengthSquared();
+        let halfB = oc.dot(ray.direction);
+        let c = oc.lengthSquared() - (this.r * this.r);
+
+        let discriminant = (halfB * halfB) - (a * c);
+        if (discriminant < 0) { return false; }
+        let sqrtD = Math.sqrt(discriminant);
+
+        // find the nearest root that lies in the acceptable range to determine
+        //  if the sphere was hit
+        let root = (-halfB - sqrtD) / a;
+        if ((root < tMin) || (tMax < root)) {
+            root = (-halfB + sqrtD) / a;
+            if ((root < tMin) || (tMax < root)) {
+                return false;
+            }
+        }
+
+        hitRecord.t = root;
+        hitRecord.p = ray.at(hitRecord.t);
+        let outwardNormal = hitRecord.p.minus(this.center(ray.time)).divByNum(this.r);
+        hitRecord.setFaceNormal(ray, outwardNormal);
+        hitRecord.matPtr = this.matPtr;
+
+        return true;
+    }
+}
+
 class HittableList {
     constructor() {
         this.hittables = [];
     }
 
     toString() {
-        return `&ltHittableList(hittables=[\${this.hittables}])&gt`;
+        return `<HittableList(hittables=[${this.hittables}])>`;
     }
 
     add(hittable) {
@@ -427,7 +319,7 @@ class Material {
     }
 
     toString() {
-        return `&ltMaterial()&gt`
+        return `<Material()>`
     }
 }
 
@@ -438,7 +330,7 @@ class Lambertian extends Material {
     }
 
     toString() {
-        return `&ltLambertian(albedo=\${this.albedo})&gt`
+        return `<Lambertian(albedo=${this.albedo})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -448,7 +340,7 @@ class Lambertian extends Material {
             scatterDirection = hitRecord.normal;
         }
 
-        this.scattered = new Ray(hitRecord.p, scatterDirection);
+        this.scattered = new Ray(hitRecord.p, scatterDirection, rIn.time);
         this.attenuation = this.albedo;
         return true;
     }
@@ -458,19 +350,19 @@ class Metal extends Material {
     constructor(albedo, fuzz) {
         super();
         this.albedo = albedo; // Color of the metal
-        this.fuzz = (fuzz &lt 1) ? fuzz : 1;
+        this.fuzz = (fuzz < 1) ? fuzz : 1;
     }
 
     toString() {
-        return `&ltMetal(albedo=\${this.albedo}, fuzz=\${this.fuzz})&gt`
+        return `<Metal(albedo=${this.albedo}, fuzz=${this.fuzz})>`
     }
 
     scatter(rIn, hitRecord) {
         let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
 
-        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)));
+        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)), rIn.time);
         this.attenuation = this.albedo;
-        return (this.scattered.direction.dot(hitRecord.normal) &gt 0);
+        return (this.scattered.direction.dot(hitRecord.normal) > 0);
     }
 }
 
@@ -481,7 +373,7 @@ class Dielectric extends Material {
     }
 
     toString() {
-        return `&ltDialectric(indexOfRefraction=\${this.ir})&gt`
+        return `<Dialectric(indexOfRefraction=${this.ir})>`
     }
 
     reflectance(cosine, refIdx) {
@@ -498,16 +390,16 @@ class Dielectric extends Material {
         let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
         let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
 
-        let cannotRefract = refractionRatio * sinTheta &gt 1.0;
+        let cannotRefract = refractionRatio * sinTheta > 1.0;
         let direction;
 
-        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) &gt randomDouble(0.0, 1.0))) {
+        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) > randomDouble(0.0, 1.0))) {
             direction = reflect(unitDirection, hitRecord.normal);
         } else {
             direction = refract(unitDirection, hitRecord.normal, refractionRatio);
         }
 
-        this.scattered = new Ray(hitRecord.p, direction);
+        this.scattered = new Ray(hitRecord.p, direction, rIn.time);
 
         return true;
     }
@@ -521,7 +413,9 @@ class Camera {
             vfov, // Vertical field of view in degrees
             aspectRatio,
             aperture,
-            focusDist
+            focusDist,
+            time0 = 0,
+            time1 = 0
         ) {
 
         let theta = degreesToRadians(vfov);
@@ -539,6 +433,9 @@ class Camera {
         this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2)).minus(this.vertical.divByNum(2)).minus(this.w.timesNum(focusDist));
 
         this.lensRadius = aperture / 2;
+
+        this.time0 = time0;
+        this.time1 = time1;
     }
 
     getRay(s, t) {
@@ -546,7 +443,7 @@ class Camera {
         let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
 
         let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin).minus(offset);
-        return new Ray(this.origin.plus(offset), direction);
+        return new Ray(this.origin.plus(offset), direction, randomDouble(this.time0, this.time1));
     }
 }
 
@@ -577,15 +474,15 @@ function randomInt(min=0, max=1.0) {
  * Clamps the value x in the range [min, max]
  */
 function clamp(x, min, max) {
-    if (x &lt min) return min;
-    if (x &gt max) return max;
+    if (x < min) return min;
+    if (x > max) return max;
     return x;
 }
 
 function randomInUnitSphere() {
     while (true) {
         let p = Vec3.prototype.random(-1.0, 1.0);
-        if (p.lengthSquared() &gt= 1.0) continue;
+        if (p.lengthSquared() >= 1.0) continue;
         return p;
     } 
 }
@@ -596,7 +493,7 @@ function randomUnitVector() {
 
 function randomInHemisphere(normal) {
     let inUnitSphere = randomInUnitSphere();
-    if (inUnitSphere.dot(normal) &gt 0.0) { // In the same hemisphure as the normal
+    if (inUnitSphere.dot(normal) > 0.0) { // In the same hemisphure as the normal
         return inUnitSphere;
     } else {
         return inUnitSphere.negative();
@@ -616,13 +513,13 @@ function refract(uv, n, etaiOverEtat) {
 }
 
 function inBox(x, y, left, right, top, bottom) {
-    return (left &lt= x && x &lt= right && top &lt= y && y &lt= bottom);
+    return (left <= x && x <= right && top <= y && y <= bottom);
 }
 
 function randomInUnitDisk() {
     while (true) {
         let p = new Vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
-        if (p.lengthSquared() &gt= 1) continue;
+        if (p.lengthSquared() >= 1) continue;
         return p;
 
     }
@@ -634,13 +531,14 @@ function randomInUnitDisk() {
 function rayColor(ray, world, depth) {
     let hitRecord = new HitRecord();
 
-    if (depth &lt= 0) {
+    if (depth <= 0) {
         return new Color(0.0, 0.0, 0.0);
     }
 
     if (world.hitBy(ray, 0.001, Infinity, hitRecord)) {
         if (hitRecord.matPtr.scatter(ray, hitRecord)) {
-            return hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, world, depth - 1));
+            let color = rayColor(hitRecord.matPtr.scattered, world, depth - 1);
+            return hitRecord.matPtr.attenuation.times(color);
         }
         return new Color(0.0, 0.0, 0.0);
     }
@@ -664,7 +562,7 @@ function main(renderPattern=null) {
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 100;
+    const SAMPLES_PER_PIXEL = 50;
     const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
@@ -674,6 +572,7 @@ function main(renderPattern=null) {
         newlyRenderedPixels.push([imageX, imageY, [r, g, b]]);
     }
 
+    /*
     // World
     let world = new HittableList();
 
@@ -688,15 +587,30 @@ function main(renderPattern=null) {
     world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
     world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
 
+    const lookfrom = new Point3D(-4, 1, 2);
+    const lookat = new Point3D(0, 0, -1);
+    const vup = new Vec3(0, 1, 0);
+    const fieldOfView = 20;
+    const distToFocus = lookfrom.minus(lookat).length();
+    const aperture = 1.0
+
     // Camera
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
+    */
+    
 
-    let lookfrom = new Point3D(-4, 1, 2);
-    let lookat = new Point3D(0, 0, -1);
-    let vup = new Vec3(0, 1, 0);
-    let distToFocus = lookfrom.minus(lookat).length();
-    let aperture = 1.0
+    // World
+    let world = randomScene();
 
-    const camera = new Camera(lookfrom, lookat, vup, 20, ASPECT_RATIO, aperture, distToFocus);
+    // Camera
+    const lookfrom = new Point3D(13, 2, 3);
+    const lookat = new Point3D(0, 0, 0);
+    const vup = new Vec3(0, 1, 0);
+    const fieldOfView = 20;
+    const aperture = 0.2;
+    const distToFocus = 10;
+
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
 
     // --- Render
 
@@ -704,7 +618,7 @@ function main(renderPattern=null) {
         let pixelColor = new Color(0, 0, 0);
 
         // Take a bunch of samples around the pixel to do antialiasing
-        for (let s = 0; s &lt SAMPLES_PER_PIXEL; ++s) {
+        for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
             pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
@@ -727,8 +641,8 @@ function main(renderPattern=null) {
         // A simple default rendering pattern that renders the image from left
         // to right, column by column
         renderPattern = function* (imageWidth, imageHeight) { 
-            for (let x = 0; x &lt= imageWidth; x++) {
-                for (let y = 0; y &lt= imageHeight; y++) {
+            for (let x = 0; x <= imageWidth; x++) {
+                for (let y = 0; y <= imageHeight; y++) {
                     yield [[x, y]];
                 }
             }
@@ -749,6 +663,7 @@ function main(renderPattern=null) {
         let pixels = ret.value;
 
         if (ret.done) {
+            postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], [], true]);
             break;
         } 
 
@@ -762,14 +677,293 @@ function main(renderPattern=null) {
         }
 
         // Post the pixels to be drawn to the image
-        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels]);
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels, false]);
         newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
     }
 }
 
-this.onmessage = (event) =&gt {
+this.onmessage = (event) => {
+    let renderPattern = event.data.renderPattern;
+
+    if (renderPattern !== undefined && renderPattern !== null) {
+        let numRows = (renderPattern.numRows === undefined) ? 1 : renderPattern.numRows;
+        let numCols = (renderPattern.numCols === undefined) ? 1 : renderPattern.numCols;
+        numRows = (numRows < 1) ? 1 : numRows;
+        numCols = (numCols < 1) ? 1 : numRows;
+
+        let pattern = renderPattern.pattern.toLowerCase();
+
+        if (pattern === "random") {
+            let patterns = [
+                "random-points",
+                "outside-in",
+                "iter-box" // proxy for left-up-row below so 1/3 chance of happening
+            ];
+            pattern = patterns[randomInt(0, patterns.length - 1)];
+
+            if (pattern === "iter-box") {
+                patterns = [
+                    "left-up-row", "right-up-row", "left-down-row", "right-down-row",
+                    "left-up-col", "right-up-col", "left-down-col", "right-down-col"
+                ];
+                pattern = patterns[randomInt(0, patterns.length - 1)];
+            }
+        }
+
+        switch (pattern) {
+            case "random-points":
+                renderPattern = boxesPattern(numRows, numCols, randomPointsInBox);
+                break;
+            case "outside-in":
+                renderPattern = boxesPattern(numRows, numCols, pointsFromOutsideIn);
+                break;
+
+            case "left-up-row":
+            case "right-up-row":
+            case "left-down-row":
+            case "right-down-row":
+            case "left-up-col":
+            case "right-up-col":
+            case "left-down-col":
+            case "right-down-col":
+                let [toRight, toBottom, row] = [pattern.includes("right"), pattern.includes("down"), pattern.includes("row")];
+                renderPattern = boxesPattern(numRows, numCols, iterBoxGen(toRight, toBottom, row));
+                break;
+
+            default:
+                renderPattern = null;
+        }
+    }
+
     main(renderPattern);
 }
-</pre></code>
-</div>
-{% endblock %}
+
+// Helper Functions
+function randomScene() {
+    let world = new HittableList();
+
+    const ground_mt = new Lambertian(new Color(0.5, 0.5, 0.5));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, ground_mt));
+
+    let randomAmount = 11;
+    for (let i = -randomAmount; i < randomAmount; ++i) {
+        for (let j = -randomAmount; j < randomAmount; ++j) {
+            let mat = randomDouble();
+            let center = new Point3D(i + (0.9 * randomDouble()), 0.2, j + (0.9 * randomDouble()));
+
+            if (center.minus(new Point3D(4, 0.2, 0)).length() > 0.9) {
+                if (mat < 0.8) {
+                    // diffuse
+                    let albedo = Vec3.prototype.random().times(Vec3.prototype.random());
+                    let sphereMaterial = new Lambertian(albedo);
+                    let center2 = center.plus(new Vec3(0, randomDouble(0, 0.5), 0));
+                    world.add(new MovingSphere(center, center2, 0.0, 1.0, 0.2, sphereMaterial));
+                } else if (mat < 0.95) {
+                    // metal
+                    let albedo = Vec3.prototype.random(0.5, 1);
+                    let fuzz = randomDouble(0, 0.5);
+                    let sphereMaterial = new Metal(albedo, fuzz);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else {
+                    // glass
+                    let sphereMaterial = new Dielectric(1.5);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    const mat1 = new Dielectric(1.5);
+    world.add(new Sphere(new Point3D(0, 1, 0), 1, mat1));
+
+    const mat2 = new Lambertian(new Color(0.4, 0.2, 0.1));
+    world.add(new Sphere(new Point3D(-4, 1, 0), 1, mat2));
+
+    const mat3 = new Metal(new Color(0.7, 0.6, 0.5), 0);
+    world.add(new Sphere(new Point3D(4, 1, 0), 1, mat3));
+
+    return world;
+}
+
+
+// ---------------------------------------------------------------------------
+// Render Patterns
+
+function divImage(numCols, numRows, imageWidth, imageHeight, callback) {
+    if (imageWidth < numCols) numCols = imageWidth;
+    if (imageHeight < numRows) numRows = imageHeight;
+
+    const boxWidth = Math.ceil(imageWidth / numCols);
+    const boxHeight = Math.ceil(imageHeight / numRows);
+
+    for (let y = 0; y < imageHeight; y += boxHeight) {
+        for (let x = 0; x < imageWidth; x += boxWidth) {
+            let [left, right, top, bottom] = [x, x + boxWidth, y, y + boxHeight];
+
+            // Gaurantee that the square is inside the Image (although might be slightly smaller than other squares)
+            //left = clamp(left, 0, imageWidth);
+            //right = clamp(right, 0, imageWidth);
+            //top = clamp(top, 0, imageHeight);
+            //bottom = clamp(bottom, 0, imageHeight);
+
+            // Gaurantee that the standard Graphics coordinate system is in use
+            // with positive y going down and negative y going up
+            if (left > right) [left, right] = [right, left];
+            if (top > bottom) [top, bottom] = [bottom, top];
+
+            // Call the callback with the dimensions of the current box
+            callback(left, right, top, bottom);
+        }
+    }
+}
+
+function* iterBox(left, right, top, bottom, leftToRight=true, topToBottom=true, rowMajor=true) {
+    let [colStart, colEnd, colDelta] = leftToRight ? [left, right + 1, 1] : [right, left - 1, -1];
+    let [rowStart, rowEnd, rowDelta] = topToBottom ? [top, bottom + 1, 1] : [bottom, top - 1, -1];
+
+    if (rowMajor) {
+        for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+            for (let col = colStart; col !== colEnd; col += colDelta) {
+                yield [col, row];
+            }
+        }
+    } else {
+        for (let col = colStart; col !== colEnd; col += colDelta) {
+            for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+                yield [col, row];
+            }
+        }
+    }
+}
+
+function iterBoxGen(leftToRight=true, topToBottom=true, rowMajor=true) {
+    function iterBoxWrapper(left, right, top, bottom) {
+        return iterBox(left, right, top, bottom, leftToRight, topToBottom, rowMajor);
+    }
+    return iterBoxWrapper;
+}
+
+function* pointsFromOutsideIn(left, right, top, bottom) {
+    // Don't know why but need to shift box to not miss left and top edges on
+    // left and top sides of full image
+    left--; right--; top--; bottom--;
+
+    let x = left; 
+    let y = bottom; 
+
+    let direction = 0; // 0 = left-right, 1 = bottom-top, 2 = right-left, 3 = top-bottom
+
+    function move(x, y, direction) {
+        switch (direction) {
+            case 0: x++; break;
+            case 1: y--; break;
+            case 2: x--; break;
+            case 3: y++; break;
+        }
+        return [x, y];
+    }
+
+    function shrinkBox(direction, left, right, top, bottom) {
+        switch (direction) {
+            case 0: top++; break;
+            case 1: left++; break;
+            case 2: bottom--; break;
+            case 3: right--; break;
+        }
+        return [left, right, top, bottom];
+    }
+
+    while (true) {
+        yield [x, y];
+
+        let [nextX, nextY] = move(x, y, direction);
+
+        if (!inBox(nextX, nextY, left, right, top, bottom)) {
+            [left, right, top, bottom] = shrinkBox(direction, left, right, top, bottom);
+            direction = (direction + 1) % 4;
+
+            [nextX, nextY] = move(x, y, direction);
+
+            if (!inBox(nextX, nextY, left, right, top, bottom)) {
+                break;
+            }
+        }
+
+        [x, y] = [nextX, nextY];
+    }
+}
+
+function* randomPointsInBox(left, right, top, bottom) {
+    const points = [];
+
+    for (let y = top; y < bottom; y++) {
+        for (let x = left; x < right; x++) {
+            points.push([x, y]);
+        }
+    }
+
+    while (0 < points.length) {
+        let i = randomInt(0, points.length - 1);
+        yield points.splice(i, 1)[0];
+    }
+}
+
+function boxesPattern(numRows, numCols, genTemplate) {
+    function* boxesPatternGen(imageWidth, imageHeight) {
+        const renderGens = [];
+
+        divImage(numRows, numCols, imageWidth, imageHeight, (left, right, top, bottom) => {
+            renderGens.push(genTemplate(left, right, top, bottom));
+        });
+
+        while (0 < renderGens.length) {
+            const yieldPoints = [];
+
+            let i = 0;
+            while (i < renderGens.length) {
+                let ret = renderGens[i].next();
+
+                if (ret.done) {
+                    renderGens.splice(i, 1);
+                    continue;
+                }
+
+                yieldPoints.push(ret.value);
+                i++;
+            }
+
+            yield yieldPoints;
+        }
+    }
+    return boxesPatternGen;
+}
+
+
+
+/**
+ * Helper function that only allows you to log something using it a set number
+ * of times, that way the website does not break because you tried to log something
+ * 100000000000 times because this only lets you log it numTimes number of times before
+ * it does not log anything else
+ */
+function safeLogger(numTimes=10, logToString=false) {
+    function log() {
+        if (numTimes > 0) {
+            if (logToString) {
+                let args = [];
+                for (let arg of arguments) {
+                    args.push(arg.toString());
+                }
+                console.log(...args);
+            } else {
+                console.log(...arguments);
+            }
+            numTimes--;
+        }
+
+        if (arguments.length === 1) {
+            return arguments[0];
+        }
+    }
+    return log;
+}

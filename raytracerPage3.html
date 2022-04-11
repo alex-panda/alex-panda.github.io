@@ -5,15 +5,17 @@
         <meta name="author" content="Alexander Peseckis">
         <meta name="description" content="Alexander Peseckis' Personal Website">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="keywords" content="{% block keywords %} HTML, CSS, JavaScript {% endblock %}">
+        <meta name="keywords" content=" HTML, CSS, JavaScript ">
 
-        {% block css_head %}
+        
         <link rel="stylesheet" type="text/css" href="index.css" />
-        {% endblock %}
+        
 
         <script type="module" src="index.js" defer></script>
 
-        {% block js_head %}{% endblock %}
+        
+<script type="module" src="raytracer3.js" defer></script>
+
     </head>
 
     <body>
@@ -23,16 +25,38 @@
         <div id="middle-col">
             <header>
                 <nav>
-                    {% block nav %}
+                    
                     <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
                     <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
                     <button id="raytracer3-nav" class="nav-btn" type="button">Raytracer Page 3</button>
-                    {% endblock %}
+                    
                 </nav>
             </header>
 
             <main>
-                {% block main %}{% endblock %}
+                
+<div id="raytracer-main">
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas1"></canvas>
+    </div>
+
+    <!--
+    <ul>
+        <li>My Goals</li>
+        <li>My Results</li>
+        <li>My Work</li>
+        <li>What I Learned</li>
+    </ul>
+
+    <p>
+        Here is the source code as it was at the end of this stage of development:
+    </p>
+    -->
+
+<code><pre>
+</pre></code>
+</div>
+
             </main>
 
             <footer>

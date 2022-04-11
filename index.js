@@ -15,3 +15,4 @@ function navBtn(btnID, destination) {
 // --- Declare navigation buttons
 navBtn("#raytracer1-nav", "raytracerPage1.html");
 navBtn("#raytracer2-nav", "raytracerPage2.html");
+navBtn("#raytracer3-nav", "raytracerPage3.html");

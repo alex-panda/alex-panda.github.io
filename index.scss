@@ -112,6 +112,9 @@ body {
     }
 
     .canvas-area {
+        img {
+            border: 1px solid black;
+        }
         padding: 0px;
     }
 }

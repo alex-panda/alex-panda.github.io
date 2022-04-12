@@ -184,6 +184,8 @@ class HitRecord {
         this.normal = null; // Vec3
         this.matPtr = null; // Will be a Material
         this.t = 0;         // Number
+        this.u = 0;         // Number
+        this.v = 0;         // Number
         this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
     }
 
@@ -253,9 +255,25 @@ class Sphere extends Hittable {
         hitRecord.p = ray.at(hitRecord.t);
         let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
         hitRecord.setFaceNormal(ray, outwardNormal);
+        this.getSphereUv(outwardNormal, hitRecord);
         hitRecord.matPtr = this.matPtr;
 
         return true;
+    }
+
+    getSphereUv(p, hitRecord) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        let theta = Math.acos(p.negative().y);
+        let phi = Math.atan2(p.negative().z, p.x) + PI;
+
+        hitRecord.u = phi / (2 * PI);
+        hitRecord.v = theta / PI;
     }
 }
 
@@ -370,7 +388,11 @@ class Material {
 class Lambertian extends Material {
     constructor(albedo) {
         super();
-        this.albedo = albedo; // Color of the Material
+        if (albedo instanceof Vec3) {
+            this.albedo = new SolidColor(albedo);
+        } else {
+            this.albedo = albedo;
+        }
     }
 
     toString() {
@@ -385,7 +407,7 @@ class Lambertian extends Material {
         }
 
         this.scattered = new Ray(hitRecord.p, scatterDirection, rIn.time);
-        this.attenuation = this.albedo;
+        this.attenuation = this.albedo.value(hitRecord.u, hitRecord.v, hitRecord.p);
         return true;
     }
 }
@@ -558,6 +580,60 @@ class BvhNode extends Hittable {
     boundingBox(time0, time1) {
         this.outputBox = this.box;
         return true;
+    }
+}
+
+class Texture {
+    value(u, v, p) {
+        throw new Error(`"value" method of Texture has not been written for this object.`);
+    }
+}
+
+class SolidColor extends Texture {
+    constructor(r=null, g=null, b=null) {
+        super();
+
+        // Can give nothing for all black texture, just r if r is a Color, or r,
+        // g, and b if you want the color to be that specific rgb
+        if (g === null && b === null) {
+            if (r === null) {
+                this.colorValue = new Color();
+            } else {
+                this.colorValue = r;
+            }
+        } else {
+            this.colorValue = new Color(r, g, b);
+        }
+    }
+
+    value(u, v, p) {
+        return this.colorValue;
+    }
+}
+
+class CheckerTexture extends Texture {
+    constructor(even, odd) {
+        super();
+        if (!(even instanceof Texture)) {
+            even = new SolidColor(even);
+        }
+
+        if (!(odd instanceof Texture)) {
+            odd = new SolidColor(odd);
+        }
+
+        this.even = even;
+        this.odd = odd;
+    }
+
+    value(u, v, p) {
+        let sines = Math.sin(10 * p.x) * Math.sin(10 * p.y) * Math.sin(10 * p.z);
+
+        if (sines < 0) {
+            return this.odd.value(u, v, p);
+        } else {
+            return this.even.value(u, v, p);
+        }
     }
 }
 
@@ -751,7 +827,7 @@ function main(renderPattern=null) {
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 200;
+    const SAMPLES_PER_PIXEL = 100;
     const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
@@ -792,7 +868,7 @@ function main(renderPattern=null) {
     const lookat = new Point3D(0, 0, 0);
     const vup = new Vec3(0, 1, 0);
     const fieldOfView = 20;
-    const aperture = 0.2;
+    const aperture = 0.0;
     const distToFocus = 10;
     const time0 = 0;
     const time1 = 1;
@@ -932,8 +1008,7 @@ this.onmessage = (event) => {
 function randomScene() {
     let world = new HittableList();
 
-    const ground_mt = new Lambertian(new Color(0.5, 0.5, 0.5));
-    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, ground_mt));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(new Color(0.5, 0.5, 0.5))));
 
     let randomAmount = 11;
     for (let i = -randomAmount; i < randomAmount; ++i) {

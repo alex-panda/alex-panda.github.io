@@ -17,6 +17,15 @@ class Vec3 {
         this.z = z;
     }
 
+    get(num) {
+        switch (num) {
+            case 0: return this.x;
+            case 1: return this.y;
+            case 2: return this.z;
+            default: throw new Error(`${num} is not a valid index of the vector.`);
+        }
+    }
+
     toString() {
         return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
@@ -60,6 +69,13 @@ class Vec3 {
         return this;
     }
 
+    timesEqNum(num) {
+        this.x *= num;
+        this.y *= num;
+        this.z *= num;
+        return this;
+    }
+
     divEq(vec3) {
         this.x /= vec3.x;
         this.y /= vec3.y;
@@ -89,6 +105,10 @@ class Vec3 {
 
     minusNum(num) {
         return new this.constructor((this.x - num), (this.y - num), (this.z - num));
+    }
+
+    minusedByNum(vec3) {
+        return new this.constructor((num - this.x), (num - this.y), (num - this.z));
     }
 
     times(vec3) {
@@ -175,6 +195,8 @@ class HitRecord {
         this.normal = null; // Vec3
         this.matPtr = null; // Will be a Material
         this.t = 0;         // Number
+        this.u = 0;         // Number
+        this.v = 0;         // Number
         this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
     }
 
@@ -190,7 +212,11 @@ class HitRecord {
 
 class Hittable {
     hitBy(ray) {
-        throw "hitBy is not Implemented for this hittable object.";
+        throw Error("hitBy is not Implemented for this hittable object.");
+    }
+
+    boundingBox(tim0, time1) {
+        throw Error("boundingBox is not Implemented for this hittable object.");
     }
 
     toString() {
@@ -208,6 +234,12 @@ class Sphere extends Hittable {
 
     toString() {
         return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = new AABB(this.center.minus(new Vec3(this.r, this.r, this.r)),
+                                  this.center.plus( new Vec3(this.r, this.r, this.r)));
+        return true;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -234,9 +266,25 @@ class Sphere extends Hittable {
         hitRecord.p = ray.at(hitRecord.t);
         let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
         hitRecord.setFaceNormal(ray, outwardNormal);
+        this.getSphereUv(outwardNormal, hitRecord);
         hitRecord.matPtr = this.matPtr;
 
         return true;
+    }
+
+    getSphereUv(p, hitRecord) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        let theta = Math.acos(p.negative().y);
+        let phi = Math.atan2(p.negative().z, p.x) + PI;
+
+        hitRecord.u = phi / (2 * PI);
+        hitRecord.v = theta / PI;
     }
 }
 
@@ -253,6 +301,16 @@ class MovingSphere extends Hittable {
 
     center(time) {
         return this.center0.plus(this.center1.minus(this.center0).timesNum((time - this.time0) / (this.time1 - this.time0)));
+    }
+
+    boundingBox(time0, time1) {
+        let box0 = new AABB(this.center(time0).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time0).plus( new Vec3(this.r, this.r, this.r)));
+
+        let box1 = new AABB(this.center(time1).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time1).plus( new Vec3(this.r, this.r, this.r)));
+        this.outputBox = surroundingBox(box0, box1);
+        return true;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -294,6 +352,21 @@ class HittableList {
         return `<HittableList(hittables=[${this.hittables}])>`;
     }
 
+    boundingBox(time0, time1) {
+        if (this.hittables.length === 0) return false;
+
+        let tempBox = new AABB();
+        let firstBox = true;
+
+        for (let hittable of this.hittables) {
+            if (!hittable.boundingBox(time0, time1)) return false;
+            this.outputBox = firstBox ? tempBox : surroundingBox(this.outputBox, tempBox);
+            firstBox = false;
+        }
+        return true;
+    }
+
+
     add(hittable) {
         this.hittables.push(hittable);
     }
@@ -326,7 +399,11 @@ class Material {
 class Lambertian extends Material {
     constructor(albedo) {
         super();
-        this.albedo = albedo; // Color of the Material
+        if (albedo instanceof Vec3) {
+            this.albedo = new SolidColor(albedo);
+        } else {
+            this.albedo = albedo;
+        }
     }
 
     toString() {
@@ -341,7 +418,7 @@ class Lambertian extends Material {
         }
 
         this.scattered = new Ray(hitRecord.p, scatterDirection, rIn.time);
-        this.attenuation = this.albedo;
+        this.attenuation = this.albedo.value(hitRecord.u, hitRecord.v, hitRecord.p);
         return true;
     }
 }
@@ -405,6 +482,284 @@ class Dielectric extends Material {
     }
 }
 
+// Represents an Axis-Aligned Bounding Box
+class AABB {
+    constructor(a, b) {
+        if (a === undefined) a = new Vec3();
+        if (b === undefined) b = new Vec3();
+        this.min = a; // Point3D
+        this.max = b; // Point3D
+    }
+
+    hitBy(ray, tMin, tMax) {
+        for (let a = 0; a < 3; a++) {
+            let invD = 1.0 / ray.direction.get(a);
+            let t0 = (this.min.get(a) - ray.origin.get(a)) * invD;
+            let t1 = (this.max.get(a) - ray.origin.get(a)) * invD;
+
+            if (invD < 0.0) {
+                // Swap the two
+                [t0, t1] = [t1, t0];
+            }
+
+            tMin = t0 > tMin ? t0 : tMin;
+            tMax = t1 < tMax ? t1: tMax;
+            if (tMax <= tMin) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+class BvhNode extends Hittable {
+    constructor(hittableList, time0=null, time1=null, start=null, end=null) {
+        super();
+        if (Array.isArray(hittableList)) {
+            this.hittables = hittableList;
+        } else if (hittableList instanceof HittableList) {
+            this.hittables = hittableList.hittables;
+        } else {
+            throw new Error(`hittableList "${hittableList}" is not of a valid type!`);
+        }
+
+        this.start = start = start ?? 0; // Number : index of hittableList that this node starts at
+        this.end = end = end ?? this.hittables.length;     // Number : index of hittableList that this nod ends at
+        this.time0 = time0 = time0 ?? 0; // Number
+        this.time1 = time1 = time1 ?? 0; // Number
+
+        // Things we will calculated below
+        this.box; // Bounding box
+        this.left; // Left Child
+        this.right; // Right Child
+
+        let axis = randomInt(0, 2); // Pick random axis (0=x, 1=y, 2=z)
+
+        let comparator;
+        switch (axis) {
+            case 0: comparator = boxXCompare; break;
+            case 1: comparator = boxYCompare; break;
+            case 2: comparator = boxZCompare; break;
+            default: throw new Error(`Unknown Axis "${axis}"`);
+        }
+
+        // Get length of this 
+        let hittableSpan = end - start;
+
+        if (hittableSpan === 1) {
+            // If only one object in array, then both boxes are that one object
+            this.right = this.hittables[start];
+            this.left = this.right;
+        } else if (hittableSpan === 2) {
+            // If only 2 objects are in the array, then choose which one is left and right
+            if (comparator(this.hittables[start], this.hittables[start + 1])) {
+                this.left = this.hittables[start];
+                this.right = this.hittables[start + 1];
+            } else {
+                this.left = this.hittables[start + 1];
+                this.right = this.hittables[start];
+            }
+        } else {
+            // Sort the array from this node's start to end without touching other parts of the array
+            const hittablesToSort = this.hittables.slice(start, end);
+            hittablesToSort.sort(comparator);
+            this.hittables.splice(start, hittableSpan, ...hittablesToSort);
+
+            let mid = start + Math.floor(hittableSpan / 2);
+            this.left = new BvhNode(this.hittables, time0, time1, start, mid);
+            this.right = new BvhNode(this.hittables, time0, time1, mid, end);
+        }
+
+        if (!this.left.boundingBox(time0, time1) || !this.right.boundingBox(time0, time1)) {
+            throw new Error("No bounding box in BvhNode constructor!");
+        }
+
+        this.box = surroundingBox(this.left.outputBox, this.right.outputBox);
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        if (!this.box.hitBy(ray, tMin, tMax)) {
+            return false;
+        }
+
+        let hitLeft = this.left.hitBy(ray, tMin, tMax, hitRecord);
+        let hitRight = this.right.hitBy(ray, tMin, hitLeft ? hitRecord.t : tMax, hitRecord);
+
+        return hitLeft || hitRight;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = this.box;
+        return true;
+    }
+}
+
+class Texture {
+    value(u, v, p) {
+        throw new Error(`"value" method of Texture has not been written for this object.`);
+    }
+}
+
+class SolidColor extends Texture {
+    constructor(r=null, g=null, b=null) {
+        super();
+
+        // Can give nothing for all black texture, just r if r is a Color, or r,
+        // g, and b if you want the color to be that specific rgb
+        if (g === null && b === null) {
+            if (r === null) {
+                this.colorValue = new Color();
+            } else {
+                this.colorValue = r;
+            }
+        } else {
+            this.colorValue = new Color(r, g, b);
+        }
+    }
+
+    value(u, v, p) {
+        return this.colorValue;
+    }
+}
+
+class CheckerTexture extends Texture {
+    constructor(even, odd) {
+        super();
+        if (!(even instanceof Texture)) {
+            even = new SolidColor(even);
+        }
+
+        if (!(odd instanceof Texture)) {
+            odd = new SolidColor(odd);
+        }
+
+        this.even = even;
+        this.odd = odd;
+    }
+
+    value(u, v, p) {
+        let sines = Math.sin(10 * p.x) * Math.sin(10 * p.y) * Math.sin(10 * p.z);
+
+        if (sines < 0) {
+            return this.odd.value(u, v, p);
+        } else {
+            return this.even.value(u, v, p);
+        }
+    }
+}
+
+class Perlin {
+    constructor(pointCount=256) {
+        this.pointCount = pointCount;
+
+        this.ranvec = [];
+        for (let i = 0; i < this.pointCount; i++) {
+            this.ranvec.push(Vec3.prototype.random(-1, 1).unitVector());
+        }
+
+        this.permX = this.perlinGeneratePerm();
+        this.permY = this.perlinGeneratePerm();
+        this.permZ = this.perlinGeneratePerm();
+    }
+    
+    noise(p) {
+        let u = p.x - Math.floor(p.x);
+        let v = p.y - Math.floor(p.y);
+        let w = p.z - Math.floor(p.z);
+
+        let i = Math.floor(p.x);
+        let j = Math.floor(p.y);
+        let k = Math.floor(p.z);
+
+        let c = [];
+        for (let di=0; di < 2; di++) {
+            c.push([]);
+            for (let dj=0; dj < 2; dj++) {
+                c[di].push([]);
+                for (let dk=0; dk < 2; dk++) {
+                    c[di][dj].push(
+                        this.ranvec[this.permX[(i + di) & 255] ^ 
+                                    this.permY[(j + dj) & 255] ^
+                                    this.permZ[(k + dk) & 255]
+                        ]
+                    );
+                }
+            }
+        }
+
+        return this.perlinInterp(c, u, v, w);
+    }
+
+    // Helper Functions
+
+    perlinGeneratePerm() {
+        let p = [];
+        for (let i = 0; i < this.pointCount; i++) {
+            p.push(i);
+        }
+
+        this.permute(p, this.pointCount);
+
+        return p;
+    }
+
+    permute(p, n) {
+        for (let i = n-1; i > 0; i--) {
+            let target = randomInt(0, i);
+            let tmp = p[i];
+            p[i] = p[target];
+            p[target] = tmp;
+        }
+    }
+
+    perlinInterp(c, u, v, w) {
+        let uu = u*u*(3-2*u);
+        let vv = v*v*(3-2*v);
+        let ww = w*w*(3-2*w);
+        let accum = 0.0;
+
+        for (let i=0; i < 2; i++) {
+            for (let j=0; j < 2; j++) {
+                for (let k=0; k < 2; k++) {
+                    let weight = new Vec3(u - i, v - j, w - k);
+                    accum +=  (i*uu + (1-i)*(1-uu))
+                            * (j*vv + (1-j)*(1-vv))
+                            * (k*ww + (1-k)*(1-ww))
+                            * c[i][j][k].dot(weight);
+                }
+            }
+        }
+        return accum;
+    }
+
+    turb(p, depth=7) {
+        let accum = 0.0;
+        let tempP = p;
+        let weight = 1.0;
+
+        for (let i = 0; i < depth; i++) {
+            accum += weight * this.noise(tempP);
+            weight *= 0.5;
+            tempP.timesEqNum(2);
+        }
+
+        return Math.abs(accum);
+    }
+}
+
+class NoiseTexture extends Texture {
+    constructor(scale=0) {
+        super();
+        this.scale = scale;
+        this.noise = new Perlin();
+    }
+
+    value(u, v, p) {
+        return (new Color(1, 1, 1)).timesEqNum(0.5).timesEqNum(1 + Math.sin(this.scale * p.z + 10 * this.noise.turb(p)));
+    }
+}
+
+
 class Camera {
     constructor(
             lookfrom,
@@ -467,7 +822,7 @@ function randomDouble(min=0.0, max=1.0) {
  * Returns a random integer value in [min, max]
  */
 function randomInt(min=0, max=1.0) {
-    return Math.round(randomDouble(min, max));
+    return Math.floor(randomDouble(min, max + 1.0));
 }
 
 /**
@@ -523,6 +878,39 @@ function randomInUnitDisk() {
         return p;
 
     }
+}
+
+function surroundingBox(box0, box1) {
+    let small = new Point3D(Math.min(box0.min.x, box1.min.x),
+                            Math.min(box0.min.y, box1.min.y),
+                            Math.min(box0.min.z, box1.min.z)
+    );
+
+    let big = new Point3D(Math.max(box0.max.x, box1.max.x),
+                          Math.max(box0.max.y, box1.max.y),
+                          Math.max(box0.max.z, box1.max.z)
+    );
+    return new AABB(small, big);
+}
+
+function boxCompare(a, b, axis) {
+    if (!a.boundingBox(0, 0) || !b.boundingBox(0, 0)) {
+        throw new Error("No bounding box in BvhNode constructor!");
+    }
+
+    return a.outputBox.min.get(axis) < b.outputBox.min.get(axis);
+}
+
+function boxXCompare(a, b) {
+    return boxCompare(a, b, 0);
+}
+
+function boxYCompare(a, b) {
+    return boxCompare(a, b, 1);
+}
+
+function boxZCompare(a, b) {
+    return boxCompare(a, b, 2);
 }
 
 // ----------------------------------------------------------------------------
@@ -597,20 +985,46 @@ function main(renderPattern=null) {
     // Camera
     const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
     */
-    
 
     // World
-    let world = randomScene();
+
+    let world;
+    let lookfrom, lookat;
+    let fieldOfView = 20.0;
+    let aperture = 0.1;
+
+    switch (0) {
+        case 1:
+            world = randomScene();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+            aperture = 0.1;
+            break
+        case 2:
+            world = twoSpheres();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+            break;
+        default:
+        case 3:
+            world = twoPerlinSpheres();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+    }
+
+    const vup = new Vec3(0, 1, 0);
+    const distToFocus = 10;
+    const time0 = 0;
+    const time1 = 1;
+
+    world = new BvhNode(world, time0, time1);
 
     // Camera
-    const lookfrom = new Point3D(13, 2, 3);
-    const lookat = new Point3D(0, 0, 0);
-    const vup = new Vec3(0, 1, 0);
-    const fieldOfView = 20;
-    const aperture = 0.0;
-    const distToFocus = 10;
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, time0, time1);
 
-    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
 
     // --- Render
 
@@ -739,11 +1153,34 @@ this.onmessage = (event) => {
 }
 
 // Helper Functions
+
+function twoPerlinSpheres() {
+    let world = new HittableList();
+
+    const checker = new NoiseTexture(4);
+
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(checker)));
+    world.add(new Sphere(new Point3D(0,  2, 0), 2, new Lambertian(checker)));
+
+    return world;
+}
+
+function twoSpheres() {
+    let world = new HittableList();
+
+    const checker = new CheckerTexture(new Color(0.2, 0.3, 0.1), new Color(0.9, 0.9, 0.9));
+
+    world.add(new Sphere(new Point3D(0, -10, 0), 10, new Lambertian(checker)));
+    world.add(new Sphere(new Point3D(0,  10, 0), 10, new Lambertian(checker)));
+
+    return world;
+}
+
 function randomScene() {
     let world = new HittableList();
 
-    const ground_mt = new Lambertian(new Color(0.5, 0.5, 0.5));
-    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, ground_mt));
+    const checker = new CheckerTexture(new Color(0.2, 0.3, 0.1), new Color(0.9, 0.9, 0.9));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(checker)));
 
     let randomAmount = 11;
     for (let i = -randomAmount; i < randomAmount; ++i) {

@@ -50,7 +50,18 @@ if (typeof(Worker) !== undefined) {
         w.postMessage({renderPattern:renderPattern});
     }
 
+    /*
+    // This is when motion blur was first introduced
     startWorker("./raytracer3Worker1.js", "#raytracer-out-canvas1", 
+            {
+                numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
+                pattern:"random"
+            }, 0, -1, 0, 0);
+    */
+
+
+    // This is after the Axis-Aligned bounding boxes were implemented
+    startWorker("./raytracer3Worker2.js", "#raytracer-out-canvas1", 
             {
                 numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
                 pattern:"random"

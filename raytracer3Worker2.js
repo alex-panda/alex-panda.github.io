@@ -17,6 +17,15 @@ class Vec3 {
         this.z = z;
     }
 
+    get(num) {
+        switch (num) {
+            case 0: return this.x;
+            case 1: return this.y;
+            case 2: return this.z;
+            default: throw new Error(`${num} is not a valid index of the vector.`);
+        }
+    }
+
     toString() {
         return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
@@ -190,7 +199,11 @@ class HitRecord {
 
 class Hittable {
     hitBy(ray) {
-        throw "hitBy is not Implemented for this hittable object.";
+        throw Error("hitBy is not Implemented for this hittable object.");
+    }
+
+    boundingBox(tim0, time1) {
+        throw Error("boundingBox is not Implemented for this hittable object.");
     }
 
     toString() {
@@ -208,6 +221,12 @@ class Sphere extends Hittable {
 
     toString() {
         return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = new AABB(this.center.minus(new Vec3(this.r, this.r, this.r)),
+                                  this.center.plus( new Vec3(this.r, this.r, this.r)));
+        return true;
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
@@ -255,6 +274,16 @@ class MovingSphere extends Hittable {
         return this.center0.plus(this.center1.minus(this.center0).timesNum((time - this.time0) / (this.time1 - this.time0)));
     }
 
+    boundingBox(time0, time1) {
+        let box0 = new AABB(this.center(time0).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time0).plus( new Vec3(this.r, this.r, this.r)));
+
+        let box1 = new AABB(this.center(time1).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time1).plus( new Vec3(this.r, this.r, this.r)));
+        this.outputBox = surroundingBox(box0, box1);
+        return true;
+    }
+
     hitBy(ray, tMin, tMax, hitRecord) {
         let oc = ray.origin.minus(this.center(ray.time));
         let a = ray.direction.lengthSquared();
@@ -293,6 +322,21 @@ class HittableList {
     toString() {
         return `<HittableList(hittables=[${this.hittables}])>`;
     }
+
+    boundingBox(time0, time1) {
+        if (this.hittables.length === 0) return false;
+
+        let tempBox = new AABB();
+        let firstBox = true;
+
+        for (let hittable of this.hittables) {
+            if (!hittable.boundingBox(time0, time1)) return false;
+            this.outputBox = firstBox ? tempBox : surroundingBox(this.outputBox, tempBox);
+            firstBox = false;
+        }
+        return true;
+    }
+
 
     add(hittable) {
         this.hittables.push(hittable);
@@ -405,6 +449,118 @@ class Dielectric extends Material {
     }
 }
 
+// Represents an Axis-Aligned Bounding Box
+class AABB {
+    constructor(a, b) {
+        if (a === undefined) a = new Vec3();
+        if (b === undefined) b = new Vec3();
+        this.min = a; // Point3D
+        this.max = b; // Point3D
+    }
+
+    hitBy(ray, tMin, tMax) {
+        for (let a = 0; a < 3; a++) {
+            let invD = 1.0 / ray.direction.get(a);
+            let t0 = (this.min.get(a) - ray.origin.get(a)) * invD;
+            let t1 = (this.max.get(a) - ray.origin.get(a)) * invD;
+
+            if (invD < 0.0) {
+                // Swap the two
+                [t0, t1] = [t1, t0];
+            }
+
+            tMin = t0 > tMin ? t0 : tMin;
+            tMax = t1 < tMax ? t1: tMax;
+            if (tMax <= tMin) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+class BvhNode extends Hittable {
+    constructor(hittableList, time0=null, time1=null, start=null, end=null) {
+        super();
+        if (Array.isArray(hittableList)) {
+            this.hittables = hittableList;
+        } else if (hittableList instanceof HittableList) {
+            this.hittables = hittableList.hittables;
+        } else {
+            throw new Error(`hittableList "${hittableList}" is not of a valid type!`);
+        }
+
+        this.start = start = start ?? 0; // Number : index of hittableList that this node starts at
+        this.end = end = end ?? this.hittables.length;     // Number : index of hittableList that this nod ends at
+        this.time0 = time0 = time0 ?? 0; // Number
+        this.time1 = time1 = time1 ?? 0; // Number
+
+        // Things we will calculated below
+        this.box; // Bounding box
+        this.left; // Left Child
+        this.right; // Right Child
+
+        let axis = randomInt(0, 2); // Pick random axis (0=x, 1=y, 2=z)
+
+        let comparator;
+        switch (axis) {
+            case 0: comparator = boxXCompare; break;
+            case 1: comparator = boxYCompare; break;
+            case 2: comparator = boxZCompare; break;
+            default: throw new Error(`Unknown Axis "${axis}"`);
+        }
+
+        // Get length of this 
+        let hittableSpan = end - start;
+
+        if (hittableSpan === 1) {
+            // If only one object in array, then both boxes are that one object
+            this.right = this.hittables[start];
+            this.left = this.right;
+        } else if (hittableSpan === 2) {
+            // If only 2 objects are in the array, then choose which one is left and right
+            if (comparator(this.hittables[start], this.hittables[start + 1])) {
+                this.left = this.hittables[start];
+                this.right = this.hittables[start + 1];
+            } else {
+                this.left = this.hittables[start + 1];
+                this.right = this.hittables[start];
+            }
+        } else {
+            // Sort the array from this node's start to end without touching other parts of the array
+            const hittablesToSort = this.hittables.slice(start, end);
+            hittablesToSort.sort(comparator);
+            this.hittables.splice(start, hittableSpan, ...hittablesToSort);
+
+            let mid = start + Math.floor(hittableSpan / 2);
+            this.left = new BvhNode(this.hittables, time0, time1, start, mid);
+            this.right = new BvhNode(this.hittables, time0, time1, mid, end);
+        }
+
+        if (!this.left.boundingBox(time0, time1) || !this.right.boundingBox(time0, time1)) {
+            throw new Error("No bounding box in BvhNode constructor!");
+        }
+
+        this.box = surroundingBox(this.left.outputBox, this.right.outputBox);
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        if (!this.box.hitBy(ray, tMin, tMax)) {
+            return false;
+        }
+
+        let hitLeft = this.left.hitBy(ray, tMin, tMax, hitRecord);
+        let hitRight = this.right.hitBy(ray, tMin, hitLeft ? hitRecord.t : tMax, hitRecord);
+
+        return hitLeft || hitRight;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = this.box;
+        return true;
+    }
+}
+
 class Camera {
     constructor(
             lookfrom,
@@ -467,7 +623,7 @@ function randomDouble(min=0.0, max=1.0) {
  * Returns a random integer value in [min, max]
  */
 function randomInt(min=0, max=1.0) {
-    return Math.round(randomDouble(min, max));
+    return Math.floor(randomDouble(min, max + 1.0));
 }
 
 /**
@@ -525,6 +681,39 @@ function randomInUnitDisk() {
     }
 }
 
+function surroundingBox(box0, box1) {
+    let small = new Point3D(Math.min(box0.min.x, box1.min.x),
+                            Math.min(box0.min.y, box1.min.y),
+                            Math.min(box0.min.z, box1.min.z)
+    );
+
+    let big = new Point3D(Math.max(box0.max.x, box1.max.x),
+                          Math.max(box0.max.y, box1.max.y),
+                          Math.max(box0.max.z, box1.max.z)
+    );
+    return new AABB(small, big);
+}
+
+function boxCompare(a, b, axis) {
+    if (!a.boundingBox(0, 0) || !b.boundingBox(0, 0)) {
+        throw new Error("No bounding box in BvhNode constructor!");
+    }
+
+    return a.outputBox.min.get(axis) < b.outputBox.min.get(axis);
+}
+
+function boxXCompare(a, b) {
+    return boxCompare(a, b, 0);
+}
+
+function boxYCompare(a, b) {
+    return boxCompare(a, b, 1);
+}
+
+function boxZCompare(a, b) {
+    return boxCompare(a, b, 2);
+}
+
 // ----------------------------------------------------------------------------
 // Render
 
@@ -562,7 +751,7 @@ function main(renderPattern=null) {
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 100;
+    const SAMPLES_PER_PIXEL = 200;
     const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
@@ -597,10 +786,6 @@ function main(renderPattern=null) {
     // Camera
     const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
     */
-    
-
-    // World
-    let world = randomScene();
 
     // Camera
     const lookfrom = new Point3D(13, 2, 3);
@@ -609,8 +794,13 @@ function main(renderPattern=null) {
     const fieldOfView = 20;
     const aperture = 0.2;
     const distToFocus = 10;
+    const time0 = 0;
+    const time1 = 1;
 
-    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, time0, time1);
+
+    // World
+    let world = new BvhNode(randomScene(), time0, time1);
 
     // --- Render
 

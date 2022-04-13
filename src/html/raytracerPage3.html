@@ -32,30 +32,31 @@
         In chapter 3 I implemented a bounding-higherarchy in order to speed up
         the rendering process. In order to understand how this works, you must
         first understand that before this improvement, all objects were simply
-        put in a list so every time a ray of light wanted to know if it hit
+        put in a list so that every time a ray of light wanted to know if it hit
         something in the world it would have to check all N objects in the list
         to do so. With this improvement, however, I have put them in a hierarchy
-        of Axis Aligned Bounding Boxes (AABBs). Each AABB is a box around the
-        object that represents loosly where an object is must easier
-        to check if hit than the more complex object it encompases. This makes
-        it so that if a ray of light misses the box, then the object the box
-        encompasses could not possibly have been hit, but the if the box is
-        hit then the inside object needs to be checked to see if it was hit.
-        These AABBs can also be combined, so you may have two AABBs encompassed
-        by a bigger AABB. In this way, you can create a tree-structure with 1
-        AABB that represents the entire screen that has two children AABBs
-        that each represent half of the objects. If the parent AABB gets hit,
-        then each child AABB is checked to see if it is hit. You can do these
-        checks recursively until you get down to the leaf nodes which hold
-        the actually complex objects in them, in which case you have to do
-        a final check to see if the actual physical object was hit or not.
-        By splitting the objects in half recursively, we have also recursively
-        split the hit-tests we have to do and thus hit-testing the world now
-        takes O(log[base 2](N)) which is much faster than the O(N) hit-testing
-        we were doing before. You can see the difference in the first two
-        example renders down below as the first one is done with 100 objects
-        with the O(N) list method and the second one (and all renders after it)
-        use the O(log[base 2](N)) method instead.
+        of Axis Aligned Bounding Boxes (AABBs). Each AABB is a box
+        around the object that represents loosly where the object is in space so
+        that if a ray of light misses the box, then the ray cannot even possibly
+        hit the object that the box encompasses, thus allowing you to skip
+        hit-testing the object inside the box (if the box is hit then the object
+        inside still needs to be checked to see if it was hit). These AABBs can
+        also be combined, so you may have two AABBs encompassed by a bigger
+        AABB. In this way, you can create a tree-structure with a bunch of
+        parent AABBs that each have 2 child AABBs, each representing half of the
+        parent's encompassed children objects. If the parent AABB gets hit, then
+        each child AABB is checked to see if it is hit. Starting from the root
+        of the tree, you can do these checks recursively down the tree until you
+        get to the leaf nodes which hold the actually complex objects in them,
+        in which case you have to do a final check to see if the actual physical
+        object was hit or not. By splitting the objects recursively into this
+        binary tree, we have also recursively split the hit-tests we have to do
+        and thus hit-testing the world now takes O(log[base 2](N)) time which is
+        much faster than the O(N) time hit-testing we were doing before. You can
+        see the difference in these runtimes between the first two example
+        renders down below as the first one is done with 100 objects with the
+        O(N) list method and the second render (and all renders after it) uses
+        the O(log[base 2](N)) method instead.
     </p>
 
     <p>

@@ -26,6 +26,8 @@
             <header>
                 <nav>
                     
+                    
+
                     <button id="raytracer1-nav" class="nav-btn" type="button">Raytracer Page 1</button>
                     <button id="raytracer2-nav" class="nav-btn" type="button">Raytracer Page 2</button>
                     <button id="raytracer3-nav" class="nav-btn" type="button">Raytracer Page 3</button>
@@ -36,32 +38,1289 @@
             <main>
                 
 <div id="raytracer-main">
+    <p>
+        After finishing the "Raytracing in One Weekend," I have gone on
+        to complete chapters 1-5 of Peter Shirly's next book in the series,
+        "Raytracing: The Next Week." Through the completion of these chapters, I
+        have improved the ray tracer by implementing motion blur, faster sphere
+        hit-testing for faster rendering, and basic texturing.
+    </p>
+
+    <p>
+        Motion blur was acheived in chapter 2 by creating a new type of sphere
+        that has a time component to it and a second center-position that it
+        moves to over that period of time. Each ray of light also now has a time
+        component that represents the instant that the ray was sent out. By
+        sending out 100 rays of light (per pixel) at random instants over the
+        time period and then averaging them together, we can use chance to
+        create the blurred motion-effect due to different numbers of these
+        light-rays hitting the object or missing it depending on how long the
+        object was in the spot for and thus how high of a chance the light ray
+        had of hitting it at any given time.  You can see the motion blur in the
+        first and second example-renders down below.
+    </p>
+
+    <p>
+        In chapter 3 I implemented a bounding-higherarchy in order to speed up
+        the rendering process. In order to understand how this works, you must
+        first understand that before this improvement, all objects were simply
+        put in a list so every time a ray of light wanted to know if it hit
+        something in the world it would have to check all N objects in the list
+        to do so. With this improvement, however, I have put them in a hierarchy
+        of Axis Aligned Bounding Boxes (AABBs). Each AABB is a box around the
+        object that represents loosly where an object is must easier
+        to check if hit than the more complex object it encompases. This makes
+        it so that if a ray of light misses the box, then the object the box
+        encompasses could not possibly have been hit, but the if the box is
+        hit then the inside object needs to be checked to see if it was hit.
+        These AABBs can also be combined, so you may have two AABBs encompassed
+        by a bigger AABB. In this way, you can create a tree-structure with 1
+        AABB that represents the entire screen that has two children AABBs
+        that each represent half of the objects. If the parent AABB gets hit,
+        then each child AABB is checked to see if it is hit. You can do these
+        checks recursively until you get down to the leaf nodes which hold
+        the actually complex objects in them, in which case you have to do
+        a final check to see if the actual physical object was hit or not.
+        By splitting the objects in half recursively, we have also recursively
+        split the hit-tests we have to do and thus hit-testing the world now
+        takes O(log[base 2](N)) which is much faster than the O(N) hit-testing
+        we were doing before. You can see the difference in the first two
+        example renders down below as the first one is done with 100 objects
+        with the O(N) list method and the second one (and all renders after it)
+        use the O(log[base 2](N)) method instead.
+    </p>
+
+    <p>
+        Basic texturing was implemented in chapter 4. It involves adding a texture
+        option to materials so that, when the renderer asks an object what color a
+        point on it is, it can now lookup and return a color depending on what exact
+        point on the object the renderer is asking for. This can be really seen
+        in the third example render below as the rays of light are hitting the two
+        spheres at specific points and the spheres are responding with different
+        colors depending on where they are hit.
+    </p>
+
+    <p>
+        More advanced texturing was implemented in chapter 5 where textures using
+        perlin noise were created. Perlin noise is something like white noise except
+        it has a few extra conditions it needs to fulfil. The main condition is that,
+        once perlin noise has been created, it needs to be consistent so that asking
+        it the color of a specific location multiple times will always return
+        the same color. By doing this and adding smoothing in various ways, we can create
+        a marble-like texture like what is shown in the fourth render below.
+    </p>
+
+    <p>
+        The following are four example renders that are rendered in real time from the
+        moment you open or refresh this page. A picture of each finished render is
+        shown either above or to the left of each picture being rendered (depending on the width
+        of your screen) as each render takes place. The first render is of 100 objects using
+        an O(N) time hittest (so it should take a very long time) and the second render
+        is also of 100 objects but using an O(log[base 2](N)) time hittest (which should be much faster
+        than the first render). Both of these renders also show motion blur as
+        some of the spheres should look like they are moving. The third render
+        is showing texturing as each point on the
+        spheres is looking up a specific color to create that white and green checkered pattern.
+        The fourth render is also showing texturing but using perlin noise as the texture to
+        create a marbled-effect for the spheres.
+    </p>
+
     <div class="canvas-area center">
+        <img src="./assets/page3-ManySpheres1.PNG" width="400" />
         <canvas id="raytracer-out-canvas1"></canvas>
     </div>
 
     <div class="canvas-area center">
+        <img src="./assets/page3-ManySpheres2.PNG" width="400" />
         <canvas id="raytracer-out-canvas2"></canvas>
     </div>
 
     <div class="canvas-area center">
+        <img src="./assets/page3-twoCheckerSpheres.PNG" width="400" />
         <canvas id="raytracer-out-canvas3"></canvas>
     </div>
 
-    <!--
+    <div class="canvas-area center">
+        <img src="./assets/page3-MarbledSpheres.PNG" width="400" />
+        <canvas id="raytracer-out-canvas4"></canvas>
+    </div>
+
     <ul>
         <li>My Goals</li>
+        <ul>
+            <li>Implement motion blur.</li>
+            <li>Improve render times.</li>
+            <li>Allow textures to be used.</li>
+            <li>Create a texture complex enough to look like marbled-stone.</li>
+        </ul>
         <li>My Results</li>
+        <ul>
+            <li>I learned how to implement motion blur and did so.</li>
+            <li>I improved the render times by making hit-tests happen in O(log[base 2](N)) time.</li>
+            <li>I made it so that simple textures can now be used on the objects.</li>
+            <li>I created a texture complex enough to look like marbled-stone.</li>
+        </ul>
         <li>My Work</li>
+        <ul>
+            <li>It took me a couple of days to complete all my goals.</li>
+            <li>I spent multiple hours debugging the code.</li>
+        </ul>
         <li>What I Learned</li>
+        <ul>
+            <li>How to represent moving objects.</li>
+            <li>How to make moving objects have motion blur.</li>
+            <li>What Axis Aligned Bounding Boxes (AABBs) are.</li>
+            <li>How to create a tree of AABBs and greatly reduce the time it takes to do hit-tests and thus the time it takes to render an image.</li>
+            <li>How to implement textures.</li>
+            <li>What Perlin noise is and how to generate it.</li>
+            <li>How to make Perlin noise into a texture so that it can be put on objects.</li>
+        </ul>
     </ul>
 
     <p>
         Here is the source code as it was at the end of this stage of development:
     </p>
-    -->
 
 <code><pre>
+
+// ----------------------------------------------------------------------------
+// Constants
+
+const INFINITY = Infinity;
+const PI = 3.1415926535897932385;
+
+// ----------------------------------------------------------------------------
+// Helper Classes
+
+class Vec3 {
+    constructor(x=0, y=0, z=0) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    get(num) {
+        switch (num) {
+            case 0: return this.x;
+            case 1: return this.y;
+            case 2: return this.z;
+            default: throw new Error(`\${num} is not a valid index of the vector.`);
+        }
+    }
+
+    toString() {
+        return `<Vec3(\${this.x}, \${this.y}, \${this.z})>`;
+    }
+
+    nearZero() {
+        // Return true if the vector is close to zero in all dimensions
+        const s = Math.pow(10, -8);
+        return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
+    }
+
+    random(min=0.0, max=1.0) {
+        return new this.constructor(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
+    }
+
+    copy() {
+        return new this.constructor(this.x, this.y, this.z);
+    }
+
+    negative() {
+        return new this.constructor(-this.x, -this.y, -this.z);
+    }
+
+    minusEq(vec3) {
+        this.x -= vec3.x;
+        this.y -= vec3.y;
+        this.z -= vec3.z;
+        return this;
+    }
+
+    plusEq(vec3) {
+        this.x += vec3.x;
+        this.y += vec3.y;
+        this.z += vec3.z;
+        return this;
+    }
+
+    timesEq(vec3) {
+        this.x *= vec3.x;
+        this.y *= vec3.y;
+        this.z *= vec3.z;
+        return this;
+    }
+
+    timesEqNum(num) {
+        this.x *= num;
+        this.y *= num;
+        this.z *= num;
+        return this;
+    }
+
+    divEq(vec3) {
+        this.x /= vec3.x;
+        this.y /= vec3.y;
+        this.z /= vec3.z;
+        return this;
+    }
+
+    length() {
+        return Math.sqrt(this.lengthSquared());
+    }
+
+    lengthSquared() {
+        return (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
+    }
+
+    plus(vec3) {
+        return new this.constructor((this.x + vec3.x), (this.y + vec3.y), (this.z + vec3.z));
+    }
+
+    plusNum(num) {
+        return new this.constructor((this.x + num), (this.y + num), (this.z + num));
+    }
+
+    minus(vec3) {
+        return new this.constructor((this.x - vec3.x), (this.y - vec3.y), (this.z - vec3.z));
+    }
+
+    minusNum(num) {
+        return new this.constructor((this.x - num), (this.y - num), (this.z - num));
+    }
+
+    minusedByNum(vec3) {
+        return new this.constructor((num - this.x), (num - this.y), (num - this.z));
+    }
+
+    times(vec3) {
+        return new this.constructor((this.x * vec3.x), (this.y * vec3.y), (this.z * vec3.z));
+    }
+
+    timesNum(num) {
+        return new this.constructor((this.x * num), (this.y * num), (this.z * num));
+    }
+    
+    divBy(vec3) {
+        return new this.constructor((this.x / vec3.x), (this.y / vec3.y), (this.z / vec3.z));
+    }
+
+    divByNum(num) {
+        return new this.constructor((this.x / num), (this.y / num), (this.z / num));
+    }
+
+    dot(vec3) {
+        return (this.x * vec3.x) + (this.y * vec3.y) + (this.z * vec3.z);
+    }
+
+    cross(vec3) {
+        return new this.constructor(
+            (this.y * vec3.z) - (this.z * vec3.y),
+            (this.z * vec3.x) - (this.x * vec3.z),
+            (this.x * vec3.y) - (this.y * vec3.x)
+        );
+    }
+
+    unitVector() {
+        return this.divByNum(this.length());
+    }
+}
+
+// Vec3 aliases
+class Color extends Vec3 {
+    get r() { return this.x; }
+    set r(newR) { this.x = newR; }
+    get g() { return this.y; }
+    set g(newG) { this.y = newG; }
+    get b() { return this.z; }
+    set b(newB) { this.z = newB; }
+
+    toString() {
+        return `<Color(\${this.r}, \${this.g}, \${this.b})>`;
+    }
+}
+
+class Point3D extends Vec3 {
+    toString() {
+        return `<Point3D(\${this.x}, \${this.y}, \${this.z})>`;
+    }
+}
+
+const WHITE = new Color(1.0, 1.0, 1.0);
+const BLACK = new Color(0.0, 0.0, 0.0);
+
+/**
+ * A class that represents a ray of light.
+ */
+class Ray {
+    constructor(origin, direction, time=0.0) {
+        this.origin = origin;
+        this.direction = direction;
+        this.time = time; // The ONE time at which this Ray exists
+    }
+
+    toString() {
+        return `<Ray(origin=\${this.origin}, direction=\${this.direction})>`
+    }
+
+    /**
+     * Returns the position of this ray at the given time (Number) t
+     */
+    at(t) {
+        return (this.origin.plus(this.direction.timesNum(t)))
+    }
+}
+
+class HitRecord {
+    constructor() {
+        this.p = null;      // Point3D
+        this.normal = null; // Vec3
+        this.matPtr = null; // Will be a Material
+        this.t = 0;         // Number
+        this.u = 0;         // Number
+        this.v = 0;         // Number
+        this.frontFace; // bool, true if this record represents the face of an object facing towards the source of the arry or false if this represents the hit of a face facing away from the source of the ray
+    }
+
+    toString() {
+        return `<HitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})>`;
+    }
+
+    setFaceNormal(ray, outwardNormal) {
+        this.frontFace = ray.direction.dot(outwardNormal) < 0;
+        this.normal = this.frontFace ? outwardNormal : outwardNormal.negative();
+    }
+}
+
+class Hittable {
+    hitBy(ray) {
+        throw Error("hitBy is not Implemented for this hittable object.");
+    }
+
+    boundingBox(tim0, time1) {
+        throw Error("boundingBox is not Implemented for this hittable object.");
+    }
+
+    toString() {
+        return `<Hittable()>`;
+    }
+}
+
+class Sphere extends Hittable {
+    constructor(center, radius, material) {
+        super();
+        this.center = center;   // Vec3
+        this.r = radius;        // Number
+        this.matPtr = material; // Material
+    }
+
+    toString() {
+        return `<Sphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})>`;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = new AABB(this.center.minus(new Vec3(this.r, this.r, this.r)),
+                                  this.center.plus( new Vec3(this.r, this.r, this.r)));
+        return true;
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let oc = ray.origin.minus(this.center);
+        let a = ray.direction.lengthSquared();
+        let halfB = oc.dot(ray.direction);
+        let c = oc.lengthSquared() - (this.r * this.r);
+
+        let discriminant = (halfB * halfB) - (a * c);
+        if (discriminant < 0) { return false; }
+        let sqrtD = Math.sqrt(discriminant);
+
+        // find the nearest root that lies in the acceptable range to determine
+        //  if the sphere was hit
+        let root = (-halfB - sqrtD) / a;
+        if ((root < tMin) || (tMax < root)) {
+            root = (-halfB + sqrtD) / a;
+            if ((root < tMin) || (tMax < root)) {
+                return false;
+            }
+        }
+
+        hitRecord.t = root;
+        hitRecord.p = ray.at(hitRecord.t);
+        let outwardNormal = hitRecord.p.minus(this.center).divByNum(this.r);
+        hitRecord.setFaceNormal(ray, outwardNormal);
+        this.getSphereUv(outwardNormal, hitRecord);
+        hitRecord.matPtr = this.matPtr;
+
+        return true;
+    }
+
+    getSphereUv(p, hitRecord) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        let theta = Math.acos(p.negative().y);
+        let phi = Math.atan2(p.negative().z, p.x) + PI;
+
+        hitRecord.u = phi / (2 * PI);
+        hitRecord.v = theta / PI;
+    }
+}
+
+class MovingSphere extends Hittable {
+    constructor(center0, center1, time0, time1, radius, material) {
+        super();
+        this.center0 = center0; // Vec3
+        this.center1 = center1; // Vec3
+        this.time0 = time0;     // Number
+        this.time1 = time1;     // Number
+        this.r = radius;   // Number
+        this.matPtr = material; // Material
+    }
+
+    center(time) {
+        return this.center0.plus(this.center1.minus(this.center0).timesNum((time - this.time0) / (this.time1 - this.time0)));
+    }
+
+    boundingBox(time0, time1) {
+        let box0 = new AABB(this.center(time0).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time0).plus( new Vec3(this.r, this.r, this.r)));
+
+        let box1 = new AABB(this.center(time1).minus(new Vec3(this.r, this.r, this.r)),
+                            this.center(time1).plus( new Vec3(this.r, this.r, this.r)));
+        this.outputBox = surroundingBox(box0, box1);
+        return true;
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let oc = ray.origin.minus(this.center(ray.time));
+        let a = ray.direction.lengthSquared();
+        let halfB = oc.dot(ray.direction);
+        let c = oc.lengthSquared() - (this.r * this.r);
+
+        let discriminant = (halfB * halfB) - (a * c);
+        if (discriminant < 0) { return false; }
+        let sqrtD = Math.sqrt(discriminant);
+
+        // find the nearest root that lies in the acceptable range to determine
+        //  if the sphere was hit
+        let root = (-halfB - sqrtD) / a;
+        if ((root < tMin) || (tMax < root)) {
+            root = (-halfB + sqrtD) / a;
+            if ((root < tMin) || (tMax < root)) {
+                return false;
+            }
+        }
+
+        hitRecord.t = root;
+        hitRecord.p = ray.at(hitRecord.t);
+        let outwardNormal = hitRecord.p.minus(this.center(ray.time)).divByNum(this.r);
+        hitRecord.setFaceNormal(ray, outwardNormal);
+        hitRecord.matPtr = this.matPtr;
+
+        return true;
+    }
+}
+
+class HittableList {
+    constructor() {
+        this.hittables = [];
+    }
+
+    toString() {
+        return `<HittableList(hittables=[\${this.hittables}])>`;
+    }
+
+    boundingBox(time0, time1) {
+        if (this.hittables.length === 0) return false;
+
+        let tempBox = new AABB();
+        let firstBox = true;
+
+        for (let hittable of this.hittables) {
+            if (!hittable.boundingBox(time0, time1)) return false;
+            this.outputBox = firstBox ? tempBox : surroundingBox(this.outputBox, tempBox);
+            firstBox = false;
+        }
+        return true;
+    }
+
+
+    add(hittable) {
+        this.hittables.push(hittable);
+    }
+    
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let hitAnything = false;
+        let closestSoFar = tMax;
+
+        for (let hittable of this.hittables) {
+            if (hittable.hitBy(ray, tMin, closestSoFar, hitRecord)) {
+                hitAnything = true;
+                closestSoFar = hitRecord.t;
+            }
+        }
+
+        return hitAnything;
+    }
+}
+
+class Material {
+    scatter(rIn, hitRecord) {
+        throw Error('Method "scatter" is not implemented for this class.');
+    }
+
+    toString() {
+        return `<Material()>`
+    }
+}
+
+class Lambertian extends Material {
+    constructor(albedo) {
+        super();
+        if (albedo instanceof Vec3) {
+            this.albedo = new SolidColor(albedo);
+        } else {
+            this.albedo = albedo;
+        }
+    }
+
+    toString() {
+        return `<Lambertian(albedo=\${this.albedo})>`
+    }
+
+    scatter(rIn, hitRecord) {
+        let scatterDirection = hitRecord.normal.plus(randomUnitVector());
+
+        if (scatterDirection.nearZero()) {
+            scatterDirection = hitRecord.normal;
+        }
+
+        this.scattered = new Ray(hitRecord.p, scatterDirection, rIn.time);
+        this.attenuation = this.albedo.value(hitRecord.u, hitRecord.v, hitRecord.p);
+        return true;
+    }
+}
+
+class Metal extends Material {
+    constructor(albedo, fuzz) {
+        super();
+        this.albedo = albedo; // Color of the metal
+        this.fuzz = (fuzz < 1) ? fuzz : 1;
+    }
+
+    toString() {
+        return `<Metal(albedo=\${this.albedo}, fuzz=\${this.fuzz})>`
+    }
+
+    scatter(rIn, hitRecord) {
+        let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
+
+        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)), rIn.time);
+        this.attenuation = this.albedo;
+        return (this.scattered.direction.dot(hitRecord.normal) > 0);
+    }
+}
+
+class Dielectric extends Material {
+    constructor(indexOfRefraction) {
+        super();
+        this.ir = indexOfRefraction;
+    }
+
+    toString() {
+        return `<Dialectric(indexOfRefraction=\${this.ir})>`
+    }
+
+    reflectance(cosine, refIdx) {
+        let r0 = (1 - refIdx) / (1 + refIdx);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * Math.pow((1 - cosine), 5);
+    }
+
+    scatter(rIn, hitRecord) {
+        this.attenuation = new Color(1.0, 1.0, 1.0);
+        let refractionRatio = hitRecord.frontFace ? (1.0 / this.ir) : this.ir;
+
+        let unitDirection = rIn.direction.unitVector();
+        let cosTheta = Math.min(unitDirection.negative().dot(hitRecord.normal), 1.0);
+        let sinTheta = Math.sqrt(1.0 - (cosTheta * cosTheta));
+
+        let cannotRefract = refractionRatio * sinTheta > 1.0;
+        let direction;
+
+        if (cannotRefract || (this.reflectance(cosTheta, refractionRatio) > randomDouble(0.0, 1.0))) {
+            direction = reflect(unitDirection, hitRecord.normal);
+        } else {
+            direction = refract(unitDirection, hitRecord.normal, refractionRatio);
+        }
+
+        this.scattered = new Ray(hitRecord.p, direction, rIn.time);
+
+        return true;
+    }
+}
+
+// Represents an Axis-Aligned Bounding Box
+class AABB {
+    constructor(a, b) {
+        if (a === undefined) a = new Vec3();
+        if (b === undefined) b = new Vec3();
+        this.min = a; // Point3D
+        this.max = b; // Point3D
+    }
+
+    hitBy(ray, tMin, tMax) {
+        for (let a = 0; a < 3; a++) {
+            let invD = 1.0 / ray.direction.get(a);
+            let t0 = (this.min.get(a) - ray.origin.get(a)) * invD;
+            let t1 = (this.max.get(a) - ray.origin.get(a)) * invD;
+
+            if (invD < 0.0) {
+                // Swap the two
+                [t0, t1] = [t1, t0];
+            }
+
+            tMin = t0 > tMin ? t0 : tMin;
+            tMax = t1 < tMax ? t1: tMax;
+            if (tMax <= tMin) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+class BvhNode extends Hittable {
+    constructor(hittableList, time0=null, time1=null, start=null, end=null) {
+        super();
+        if (Array.isArray(hittableList)) {
+            this.hittables = hittableList;
+        } else if (hittableList instanceof HittableList) {
+            this.hittables = hittableList.hittables;
+        } else {
+            throw new Error(`hittableList "\${hittableList}" is not of a valid type!`);
+        }
+
+        this.start = start = start ?? 0; // Number : index of hittableList that this node starts at
+        this.end = end = end ?? this.hittables.length;     // Number : index of hittableList that this nod ends at
+        this.time0 = time0 = time0 ?? 0; // Number
+        this.time1 = time1 = time1 ?? 0; // Number
+
+        // Things we will calculated below
+        this.box; // Bounding box
+        this.left; // Left Child
+        this.right; // Right Child
+
+        let axis = randomInt(0, 2); // Pick random axis (0=x, 1=y, 2=z)
+
+        let comparator;
+        switch (axis) {
+            case 0: comparator = boxXCompare; break;
+            case 1: comparator = boxYCompare; break;
+            case 2: comparator = boxZCompare; break;
+            default: throw new Error(`Unknown Axis "\${axis}"`);
+        }
+
+        // Get length of this 
+        let hittableSpan = end - start;
+
+        if (hittableSpan === 1) {
+            // If only one object in array, then both boxes are that one object
+            this.right = this.hittables[start];
+            this.left = this.right;
+        } else if (hittableSpan === 2) {
+            // If only 2 objects are in the array, then choose which one is left and right
+            if (comparator(this.hittables[start], this.hittables[start + 1])) {
+                this.left = this.hittables[start];
+                this.right = this.hittables[start + 1];
+            } else {
+                this.left = this.hittables[start + 1];
+                this.right = this.hittables[start];
+            }
+        } else {
+            // Sort the array from this node's start to end without touching other parts of the array
+            const hittablesToSort = this.hittables.slice(start, end);
+            hittablesToSort.sort(comparator);
+            this.hittables.splice(start, hittableSpan, ...hittablesToSort);
+
+            let mid = start + Math.floor(hittableSpan / 2);
+            this.left = new BvhNode(this.hittables, time0, time1, start, mid);
+            this.right = new BvhNode(this.hittables, time0, time1, mid, end);
+        }
+
+        if (!this.left.boundingBox(time0, time1) || !this.right.boundingBox(time0, time1)) {
+            throw new Error("No bounding box in BvhNode constructor!");
+        }
+
+        this.box = surroundingBox(this.left.outputBox, this.right.outputBox);
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        if (!this.box.hitBy(ray, tMin, tMax)) {
+            return false;
+        }
+
+        let hitLeft = this.left.hitBy(ray, tMin, tMax, hitRecord);
+        let hitRight = this.right.hitBy(ray, tMin, hitLeft ? hitRecord.t : tMax, hitRecord);
+
+        return hitLeft || hitRight;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = this.box;
+        return true;
+    }
+}
+
+class Texture {
+    value(u, v, p) {
+        throw new Error(`"value" method of Texture has not been written for this object.`);
+    }
+}
+
+class SolidColor extends Texture {
+    constructor(r=null, g=null, b=null) {
+        super();
+
+        // Can give nothing for all black texture, just r if r is a Color, or r,
+        // g, and b if you want the color to be that specific rgb
+        if (g === null && b === null) {
+            if (r === null) {
+                this.colorValue = new Color();
+            } else {
+                this.colorValue = r;
+            }
+        } else {
+            this.colorValue = new Color(r, g, b);
+        }
+    }
+
+    value(u, v, p) {
+        return this.colorValue;
+    }
+}
+
+class CheckerTexture extends Texture {
+    constructor(even, odd) {
+        super();
+        if (!(even instanceof Texture)) {
+            even = new SolidColor(even);
+        }
+
+        if (!(odd instanceof Texture)) {
+            odd = new SolidColor(odd);
+        }
+
+        this.even = even;
+        this.odd = odd;
+    }
+
+    value(u, v, p) {
+        let sines = Math.sin(10 * p.x) * Math.sin(10 * p.y) * Math.sin(10 * p.z);
+
+        if (sines < 0) {
+            return this.odd.value(u, v, p);
+        } else {
+            return this.even.value(u, v, p);
+        }
+    }
+}
+
+class Perlin {
+    constructor(pointCount=256) {
+        this.pointCount = pointCount;
+
+        this.ranvec = [];
+        for (let i = 0; i < this.pointCount; i++) {
+            this.ranvec.push(Vec3.prototype.random(-1, 1).unitVector());
+        }
+
+        this.permX = this.perlinGeneratePerm();
+        this.permY = this.perlinGeneratePerm();
+        this.permZ = this.perlinGeneratePerm();
+    }
+    
+    noise(p) {
+        let u = p.x - Math.floor(p.x);
+        let v = p.y - Math.floor(p.y);
+        let w = p.z - Math.floor(p.z);
+
+        let i = Math.floor(p.x);
+        let j = Math.floor(p.y);
+        let k = Math.floor(p.z);
+
+        let c = [];
+        for (let di=0; di < 2; di++) {
+            c.push([]);
+            for (let dj=0; dj < 2; dj++) {
+                c[di].push([]);
+                for (let dk=0; dk < 2; dk++) {
+                    c[di][dj].push(
+                        this.ranvec[this.permX[(i + di) & 255] ^ 
+                                    this.permY[(j + dj) & 255] ^
+                                    this.permZ[(k + dk) & 255]
+                        ]
+                    );
+                }
+            }
+        }
+
+        return this.perlinInterp(c, u, v, w);
+    }
+
+    // Helper Functions
+
+    perlinGeneratePerm() {
+        let p = [];
+        for (let i = 0; i < this.pointCount; i++) {
+            p.push(i);
+        }
+
+        this.permute(p, this.pointCount);
+
+        return p;
+    }
+
+    permute(p, n) {
+        for (let i = n-1; i > 0; i--) {
+            let target = randomInt(0, i);
+            let tmp = p[i];
+            p[i] = p[target];
+            p[target] = tmp;
+        }
+    }
+
+    perlinInterp(c, u, v, w) {
+        let uu = u*u*(3-2*u);
+        let vv = v*v*(3-2*v);
+        let ww = w*w*(3-2*w);
+        let accum = 0.0;
+
+        for (let i=0; i < 2; i++) {
+            for (let j=0; j < 2; j++) {
+                for (let k=0; k < 2; k++) {
+                    let weight = new Vec3(u - i, v - j, w - k);
+                    accum +=  (i*uu + (1-i)*(1-uu))
+                            * (j*vv + (1-j)*(1-vv))
+                            * (k*ww + (1-k)*(1-ww))
+                            * c[i][j][k].dot(weight);
+                }
+            }
+        }
+        return accum;
+    }
+
+    turb(p, depth=7) {
+        let accum = 0.0;
+        let tempP = p;
+        let weight = 1.0;
+
+        for (let i = 0; i < depth; i++) {
+            accum += weight * this.noise(tempP);
+            weight *= 0.5;
+            tempP.timesEqNum(2);
+        }
+
+        return Math.abs(accum);
+    }
+}
+
+class NoiseTexture extends Texture {
+    constructor(scale=0) {
+        super();
+        this.scale = scale;
+        this.noise = new Perlin();
+    }
+
+    value(u, v, p) {
+        return (new Color(1, 1, 1)).timesEqNum(0.5).timesEqNum(1 + Math.sin(this.scale * p.z + 10 * this.noise.turb(p)));
+    }
+}
+
+
+class Camera {
+    constructor(
+            lookfrom,
+            lookat,
+            vup,
+            vfov, // Vertical field of view in degrees
+            aspectRatio,
+            aperture,
+            focusDist,
+            time0 = 0,
+            time1 = 0
+        ) {
+
+        let theta = degreesToRadians(vfov);
+        let h = Math.tan(theta/2);
+        this.viewportHeight = 2.0 * h;
+        this.viewportWidth = aspectRatio * this.viewportHeight;
+
+        this.w = lookfrom.minus(lookat).unitVector();
+        this.u = vup.cross(this.w).unitVector();
+        this.v = this.w.cross(this.u);
+
+        this.origin = lookfrom;
+        this.horizontal = this.u.timesNum(this.viewportWidth).timesNum(focusDist);
+        this.vertical = this.v.timesNum(this.viewportHeight).timesNum(focusDist);
+        this.lowerLeftCorner = this.origin.minus(this.horizontal.divByNum(2)).minus(this.vertical.divByNum(2)).minus(this.w.timesNum(focusDist));
+
+        this.lensRadius = aperture / 2;
+
+        this.time0 = time0;
+        this.time1 = time1;
+    }
+
+    getRay(s, t) {
+        let rd = randomInUnitDisk().timesNum(this.lensRadius);
+        let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
+
+        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin).minus(offset);
+        return new Ray(this.origin.plus(offset), direction, randomDouble(this.time0, this.time1));
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Helper Functions
+
+function degreesToRadians(degrees) {
+    return degrees * (PI / 180);
+}
+
+/**
+ * Returns a random decimal value number in [min, max)
+ * 
+ * If neither min nor max are specified, the range is assumed to be [0, 1)
+ */
+function randomDouble(min=0.0, max=1.0) {
+    return (min + ((max - min) * Math.random()));
+}
+
+/**
+ * Returns a random integer value in [min, max]
+ */
+function randomInt(min=0, max=1.0) {
+    return Math.floor(randomDouble(min, max + 1.0));
+}
+
+/**
+ * Clamps the value x in the range [min, max]
+ */
+function clamp(x, min, max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
+}
+
+function randomInUnitSphere() {
+    while (true) {
+        let p = Vec3.prototype.random(-1.0, 1.0);
+        if (p.lengthSquared() >= 1.0) continue;
+        return p;
+    } 
+}
+
+function randomUnitVector() {
+    return randomInUnitSphere().unitVector();
+}
+
+function randomInHemisphere(normal) {
+    let inUnitSphere = randomInUnitSphere();
+    if (inUnitSphere.dot(normal) > 0.0) { // In the same hemisphure as the normal
+        return inUnitSphere;
+    } else {
+        return inUnitSphere.negative();
+    }
+}
+
+function reflect(v, n) {
+    return v.minus(n.timesNum(v.dot(n) * 2));
+}
+
+function refract(uv, n, etaiOverEtat) {
+    let cosTheta = Math.min(uv.negative().dot(n), 1.0);
+    const rOutPerp = uv.plus(n.timesNum(cosTheta)).timesNum(etaiOverEtat);
+    const rOutParallel = n.timesNum(-Math.sqrt(Math.abs(1.0 - rOutPerp.lengthSquared())));
+
+    return rOutPerp.plus(rOutParallel);
+}
+
+function inBox(x, y, left, right, top, bottom) {
+    return (left <= x && x <= right && top <= y && y <= bottom);
+}
+
+function randomInUnitDisk() {
+    while (true) {
+        let p = new Vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
+        if (p.lengthSquared() >= 1) continue;
+        return p;
+
+    }
+}
+
+function surroundingBox(box0, box1) {
+    let small = new Point3D(Math.min(box0.min.x, box1.min.x),
+                            Math.min(box0.min.y, box1.min.y),
+                            Math.min(box0.min.z, box1.min.z)
+    );
+
+    let big = new Point3D(Math.max(box0.max.x, box1.max.x),
+                          Math.max(box0.max.y, box1.max.y),
+                          Math.max(box0.max.z, box1.max.z)
+    );
+    return new AABB(small, big);
+}
+
+function boxCompare(a, b, axis) {
+    if (!a.boundingBox(0, 0) || !b.boundingBox(0, 0)) {
+        throw new Error("No bounding box in BvhNode constructor!");
+    }
+
+    return a.outputBox.min.get(axis) < b.outputBox.min.get(axis);
+}
+
+function boxXCompare(a, b) {
+    return boxCompare(a, b, 0);
+}
+
+function boxYCompare(a, b) {
+    return boxCompare(a, b, 1);
+}
+
+function boxZCompare(a, b) {
+    return boxCompare(a, b, 2);
+}
+
+// ----------------------------------------------------------------------------
+// Render
+
+function rayColor(ray, world, depth) {
+    let hitRecord = new HitRecord();
+
+    if (depth <= 0) {
+        return new Color(0.0, 0.0, 0.0);
+    }
+
+    if (world.hitBy(ray, 0.001, Infinity, hitRecord)) {
+        if (hitRecord.matPtr.scatter(ray, hitRecord)) {
+            let color = rayColor(hitRecord.matPtr.scattered, world, depth - 1);
+            return hitRecord.matPtr.attenuation.times(color);
+        }
+        return new Color(0.0, 0.0, 0.0);
+    }
+
+    // Background
+    let unitDirection = ray.direction.unitVector();
+    let t = 0.5 * (unitDirection.y + 1.0);
+    return WHITE.timesNum(1.0 - t).plus((new Color(0.5, 0.7, 1.0)).timesNum(t));
+}
+
+/**
+ * The main function. It asyncronously waits for every row of the raytraced
+ * image to be rendered, then writes the resulting colors to the canvas.
+ * 
+ * Uses async so that the rendering is non-blocking and thus the internet
+ * browser will not seize up.
+ */
+function main(renderPattern=null) {
+
+    // Image Dimensions
+    const ASPECT_RATIO = 16.0 / 9.0;
+    const IMAGE_WIDTH = 400.0;
+    const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
+    const SAMPLES_PER_PIXEL = 100;
+    const MAX_DEPTH = 50;
+
+    const newlyRenderedPixels = [];
+
+    // Helper Function that writes a pixel to the context
+    function writePixel(imageX, imageY, r, g, b) {
+        newlyRenderedPixels.push([imageX, imageY, [r, g, b]]);
+    }
+
+    // World
+
+    let world;
+    let lookfrom, lookat;
+    let fieldOfView = 20.0;
+    let aperture = 0.1;
+
+    switch (0) {
+        case 1:
+            world = randomScene();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+            aperture = 0.1;
+            break
+        case 2:
+            world = twoSpheres();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+            break;
+        default:
+        case 3:
+            world = twoPerlinSpheres();
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+    }
+
+    const vup = new Vec3(0, 1, 0);
+    const distToFocus = 10;
+    const time0 = 0;
+    const time1 = 1;
+
+    world = new BvhNode(world, time0, time1);
+
+    // Camera
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, time0, time1);
+
+
+    // --- Render
+
+    function renderPixel(x, y) {
+        let pixelColor = new Color(0, 0, 0);
+
+        // Take a bunch of samples around the pixel to do antialiasing
+        for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
+            let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
+            let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
+            pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
+        }
+
+        // Figure out value of the antialiased pixel
+        let [r, g, b] = [pixelColor.r, pixelColor.g, pixelColor.b];
+
+        // Divide the color by the number of samples and gamma-correct for
+        // gamma=2.0
+        const scale = 1.0 / SAMPLES_PER_PIXEL;
+        r = Math.sqrt(r * scale);
+        g = Math.sqrt(g * scale);
+        b = Math.sqrt(b * scale);
+
+        writePixel(x, y, 256 * clamp(r, 0.0, 1.0), 256 * clamp(g, 0.0, 1.0), 256 * clamp(b, 0.0, 1.0));
+    }
+
+    if (!(renderPattern instanceof Function)) {
+        // A simple default rendering pattern that renders the image from left
+        // to right, column by column
+        renderPattern = function* (imageWidth, imageHeight) { 
+            for (let x = 0; x <= imageWidth; x++) {
+                for (let y = 0; y <= imageHeight; y++) {
+                    yield [[x, y]];
+                }
+            }
+        }
+    }
+
+    // A The function takes in the width and height of the image and will be continually
+    //  called to get a list of [x, y] values to be rendered before posting the newly-drawn
+    //  pixels
+    const renderPointsGen = renderPattern(IMAGE_WIDTH, IMAGE_HEIGHT);
+
+    // Render the image
+    while (true) {
+
+        // Get next batch of pixel [x, y] coords to be rendered
+        let ret = renderPointsGen.next();
+
+        let pixels = ret.value;
+
+        if (ret.done) {
+            postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], [], true]);
+            break;
+        } 
+
+        // render the pixels
+        for (let [x, y] of pixels) {
+
+            // If a pixel is not in the image then don't render it
+            if (inBox(x, y, 0, IMAGE_WIDTH, 0, IMAGE_HEIGHT)) {
+                renderPixel(x, y);
+            }
+        }
+
+        // Post the pixels to be drawn to the image
+        postMessage([[IMAGE_WIDTH, IMAGE_HEIGHT], newlyRenderedPixels, false]);
+        newlyRenderedPixels.splice(0, newlyRenderedPixels.length);
+    }
+}
+
+// Helper Functions
+
+function twoPerlinSpheres() {
+    let world = new HittableList();
+
+    const checker = new NoiseTexture(4);
+
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(checker)));
+    world.add(new Sphere(new Point3D(0,  2, 0), 2, new Lambertian(checker)));
+
+    return world;
+}
+
+function twoSpheres() {
+    let world = new HittableList();
+
+    const checker = new CheckerTexture(new Color(0.2, 0.3, 0.1), new Color(0.9, 0.9, 0.9));
+
+    world.add(new Sphere(new Point3D(0, -10, 0), 10, new Lambertian(checker)));
+    world.add(new Sphere(new Point3D(0,  10, 0), 10, new Lambertian(checker)));
+
+    return world;
+}
+
+function randomScene() {
+    let world = new HittableList();
+
+    const checker = new CheckerTexture(new Color(0.2, 0.3, 0.1), new Color(0.9, 0.9, 0.9));
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(checker)));
+
+    let randomAmount = 11;
+    for (let i = -randomAmount; i < randomAmount; ++i) {
+        for (let j = -randomAmount; j < randomAmount; ++j) {
+            let mat = randomDouble();
+            let center = new Point3D(i + (0.9 * randomDouble()), 0.2, j + (0.9 * randomDouble()));
+
+            if (center.minus(new Point3D(4, 0.2, 0)).length() > 0.9) {
+                if (mat < 0.8) {
+                    // diffuse
+                    let albedo = Vec3.prototype.random().times(Vec3.prototype.random());
+                    let sphereMaterial = new Lambertian(albedo);
+                    let center2 = center.plus(new Vec3(0, randomDouble(0, 0.5), 0));
+                    world.add(new MovingSphere(center, center2, 0.0, 1.0, 0.2, sphereMaterial));
+                } else if (mat < 0.95) {
+                    // metal
+                    let albedo = Vec3.prototype.random(0.5, 1);
+                    let fuzz = randomDouble(0, 0.5);
+                    let sphereMaterial = new Metal(albedo, fuzz);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                } else {
+                    // glass
+                    let sphereMaterial = new Dielectric(1.5);
+                    world.add(new Sphere(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    const mat1 = new Dielectric(1.5);
+    world.add(new Sphere(new Point3D(0, 1, 0), 1, mat1));
+
+    const mat2 = new Lambertian(new Color(0.4, 0.2, 0.1));
+    world.add(new Sphere(new Point3D(-4, 1, 0), 1, mat2));
+
+    const mat3 = new Metal(new Color(0.7, 0.6, 0.5), 0);
+    world.add(new Sphere(new Point3D(4, 1, 0), 1, mat3));
+
+    return world;
+}
 </pre></code>
 </div>
 

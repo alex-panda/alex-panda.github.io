@@ -1,155 +1,5 @@
-{% extends "./base.html" %}
-
-{% block js_head %}
-<script type="module" src="raytracer3.js" defer></script>
-{% endblock %}
-
-{% block main %}
-<div id="raytracer-main">
-    <p>
-        After finishing the "Raytracing in One Weekend," I have gone on
-        to complete chapters 1-5 of Peter Shirly's next book in the series,
-        "Raytracing: The Next Week." Through the completion of these chapters, I
-        have improved the ray tracer by implementing motion blur, faster sphere
-        hit-testing for faster rendering, and basic texturing.
-    </p>
-
-    <p>
-        Motion blur was acheived in chapter 2 by creating a new type of sphere
-        that has a time component to it and a second center-position that it
-        moves to over that period of time. Each ray of light also now has a time
-        component that represents the instant that the ray was sent out. By
-        sending out 100 rays of light (per pixel) at random instants over the
-        time period and then averaging them together, we can use chance to
-        create the blurred motion-effect due to different numbers of these
-        light-rays hitting the object or missing it depending on how long the
-        object was in the spot for and thus how high of a chance the light ray
-        had of hitting it at any given time.  You can see the motion blur in the
-        first and second example-renders down below.
-    </p>
-
-    <p>
-        In chapter 3 I implemented a bounding-higherarchy in order to speed up
-        the rendering process. In order to understand how this works, you must
-        first understand that before this improvement, all objects were simply
-        put in a list so every time a ray of light wanted to know if it hit
-        something in the world it would have to check all N objects in the list
-        to do so. With this improvement, however, I have put them in a hierarchy
-        of Axis Aligned Bounding Boxes (AABBs). Each AABB is a box around the
-        object that represents loosly where an object is must easier
-        to check if hit than the more complex object it encompases. This makes
-        it so that if a ray of light misses the box, then the object the box
-        encompasses could not possibly have been hit, but the if the box is
-        hit then the inside object needs to be checked to see if it was hit.
-        These AABBs can also be combined, so you may have two AABBs encompassed
-        by a bigger AABB. In this way, you can create a tree-structure with 1
-        AABB that represents the entire screen that has two children AABBs
-        that each represent half of the objects. If the parent AABB gets hit,
-        then each child AABB is checked to see if it is hit. You can do these
-        checks recursively until you get down to the leaf nodes which hold
-        the actually complex objects in them, in which case you have to do
-        a final check to see if the actual physical object was hit or not.
-        By splitting the objects in half recursively, we have also recursively
-        split the hit-tests we have to do and thus hit-testing the world now
-        takes O(log[base 2](N)) which is much faster than the O(N) hit-testing
-        we were doing before. You can see the difference in the first two
-        example renders down below as the first one is done with 100 objects
-        with the O(N) list method and the second one (and all renders after it)
-        use the O(log[base 2](N)) method instead.
-    </p>
-
-    <p>
-        Basic texturing was implemented in chapter 4. It involves adding a texture
-        option to materials so that, when the renderer asks an object what color a
-        point on it is, it can now lookup and return a color depending on what exact
-        point on the object the renderer is asking for. This can be really seen
-        in the third example render below as the rays of light are hitting the two
-        spheres at specific points and the spheres are responding with different
-        colors depending on where they are hit.
-    </p>
-
-    <p>
-        More advanced texturing was implemented in chapter 5 where textures using
-        perlin noise were created. Perlin noise is something like white noise except
-        it has a few extra conditions it needs to fulfil. The main condition is that,
-        once perlin noise has been created, it needs to be consistent so that asking
-        it the color of a specific location multiple times will always return
-        the same color. By doing this and adding smoothing in various ways, we can create
-        a marble-like texture like what is shown in the fourth render below.
-    </p>
-
-    <p>
-        The following are four example renders that are rendered in real time from the
-        moment you open or refresh this page. A picture of each finished render is
-        shown either above or to the left of each picture being rendered (depending on the width
-        of your screen) as each render takes place. The first render is of 100 objects using
-        an O(N) time hittest (so it should take a very long time) and the second render
-        is also of 100 objects but using an O(log[base 2](N)) time hittest (which should be much faster
-        than the first render). Both of these renders also show motion blur as
-        some of the spheres should look like they are moving. The third render
-        is showing texturing as each point on the
-        spheres is looking up a specific color to create that white and green checkered pattern.
-        The fourth render is also showing texturing but using perlin noise as the texture to
-        create a marbled-effect for the spheres.
-    </p>
-
-    <div class="canvas-area center">
-        <img src="./assets/page3-ManySpheres1.PNG" width="400" />
-        <canvas id="raytracer-out-canvas1"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page3-ManySpheres2.PNG" width="400" />
-        <canvas id="raytracer-out-canvas2"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page3-twoCheckerSpheres.PNG" width="400" />
-        <canvas id="raytracer-out-canvas3"></canvas>
-    </div>
-
-    <div class="canvas-area center">
-        <img src="./assets/page3-MarbledSpheres.PNG" width="400" />
-        <canvas id="raytracer-out-canvas4"></canvas>
-    </div>
-
-    <ul>
-        <li>My Goals</li>
-        <ul>
-            <li>Implement motion blur.</li>
-            <li>Improve render times.</li>
-            <li>Allow textures to be used.</li>
-            <li>Create a texture complex enough to look like marbled-stone.</li>
-        </ul>
-        <li>My Results</li>
-        <ul>
-            <li>I learned how to implement motion blur and did so.</li>
-            <li>I improved the render times by making hit-tests happen in O(log[base 2](N)) time.</li>
-            <li>I made it so that simple textures can now be used on the objects.</li>
-            <li>I created a texture complex enough to look like marbled-stone.</li>
-        </ul>
-        <li>My Work</li>
-        <ul>
-            <li>It took me a couple of days to complete all my goals.</li>
-            <li>I spent multiple hours debugging the code.</li>
-        </ul>
-        <li>What I Learned</li>
-        <ul>
-            <li>How to represent moving objects.</li>
-            <li>How to make moving objects have motion blur.</li>
-            <li>What Axis Aligned Bounding Boxes (AABBs) are.</li>
-            <li>How to create a tree of AABBs and greatly reduce the time it takes to do hit-tests and thus the time it takes to render an image.</li>
-            <li>How to implement textures.</li>
-            <li>What Perlin noise is and how to generate it.</li>
-            <li>How to make Perlin noise into a texture so that it can be put on objects.</li>
-        </ul>
-    </ul>
-
-    <p>
-        Here is the source code as it was at the end of this stage of development:
-    </p>
-
-<code><pre>
+let log = safeLogger(1000, false);
+let slog = safeLogger(1000, true);
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -172,12 +22,12 @@ class Vec3 {
             case 0: return this.x;
             case 1: return this.y;
             case 2: return this.z;
-            default: throw new Error(`\${num} is not a valid index of the vector.`);
+            default: throw new Error(`${num} is not a valid index of the vector.`);
         }
     }
 
     toString() {
-        return `<Vec3(\${this.x}, \${this.y}, \${this.z})>`;
+        return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
 
     nearZero() {
@@ -304,13 +154,13 @@ class Color extends Vec3 {
     set b(newB) { this.z = newB; }
 
     toString() {
-        return `<Color(\${this.r}, \${this.g}, \${this.b})>`;
+        return `<Color(${this.r}, ${this.g}, ${this.b})>`;
     }
 }
 
 class Point3D extends Vec3 {
     toString() {
-        return `<Point3D(\${this.x}, \${this.y}, \${this.z})>`;
+        return `<Point3D(${this.x}, ${this.y}, ${this.z})>`;
     }
 }
 
@@ -328,7 +178,7 @@ class Ray {
     }
 
     toString() {
-        return `<Ray(origin=\${this.origin}, direction=\${this.direction})>`
+        return `<Ray(origin=${this.origin}, direction=${this.direction})>`
     }
 
     /**
@@ -351,7 +201,7 @@ class HitRecord {
     }
 
     toString() {
-        return `<HitRecord(p=\${this.p}, normal=\${this.normal}, material=\${this.matPtr}, t=\${this.t}, frontFace=\${this.frontFace})>`;
+        return `<HitRecord(p=${this.p}, normal=${this.normal}, material=${this.matPtr}, t=${this.t}, frontFace=${this.frontFace})>`;
     }
 
     setFaceNormal(ray, outwardNormal) {
@@ -383,7 +233,7 @@ class Sphere extends Hittable {
     }
 
     toString() {
-        return `<Sphere(center=\${this.center}, radius=\${this.r}, material=\${this.matPtr})>`;
+        return `<Sphere(center=${this.center}, radius=${this.r}, material=${this.matPtr})>`;
     }
 
     boundingBox(time0, time1) {
@@ -499,7 +349,7 @@ class HittableList {
     }
 
     toString() {
-        return `<HittableList(hittables=[\${this.hittables}])>`;
+        return `<HittableList(hittables=[${this.hittables}])>`;
     }
 
     boundingBox(time0, time1) {
@@ -557,7 +407,7 @@ class Lambertian extends Material {
     }
 
     toString() {
-        return `<Lambertian(albedo=\${this.albedo})>`
+        return `<Lambertian(albedo=${this.albedo})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -581,7 +431,7 @@ class Metal extends Material {
     }
 
     toString() {
-        return `<Metal(albedo=\${this.albedo}, fuzz=\${this.fuzz})>`
+        return `<Metal(albedo=${this.albedo}, fuzz=${this.fuzz})>`
     }
 
     scatter(rIn, hitRecord) {
@@ -600,7 +450,7 @@ class Dielectric extends Material {
     }
 
     toString() {
-        return `<Dialectric(indexOfRefraction=\${this.ir})>`
+        return `<Dialectric(indexOfRefraction=${this.ir})>`
     }
 
     reflectance(cosine, refIdx) {
@@ -670,7 +520,7 @@ class BvhNode extends Hittable {
         } else if (hittableList instanceof HittableList) {
             this.hittables = hittableList.hittables;
         } else {
-            throw new Error(`hittableList "\${hittableList}" is not of a valid type!`);
+            throw new Error(`hittableList "${hittableList}" is not of a valid type!`);
         }
 
         this.start = start = start ?? 0; // Number : index of hittableList that this node starts at
@@ -690,7 +540,7 @@ class BvhNode extends Hittable {
             case 0: comparator = boxXCompare; break;
             case 1: comparator = boxYCompare; break;
             case 2: comparator = boxZCompare; break;
-            default: throw new Error(`Unknown Axis "\${axis}"`);
+            default: throw new Error(`Unknown Axis "${axis}"`);
         }
 
         // Get length of this 
@@ -1110,6 +960,32 @@ function main(renderPattern=null) {
         newlyRenderedPixels.push([imageX, imageY, [r, g, b]]);
     }
 
+    /*
+    // World
+    let world = new HittableList();
+
+    let materialGround = new Lambertian(new Color(0.8, 0.8, 0.0));
+    let materialCenter = new Lambertian(new Color(0.1, 0.2, 0.5));
+    let materialLeft = new Dielectric(1.5);
+    let materialRight = new Metal(new Color(0.8, 0.6, 0.2), 0,0);
+
+    world.add(new Sphere(new Point3D(0.0, -100.5, -1.0), 100.0, materialGround));
+    world.add(new Sphere(new Point3D(0.0, 0.0, -1.0), 0.5, materialCenter));
+    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), 0.5, materialLeft));
+    world.add(new Sphere(new Point3D(-1.0, 0.0, -1.0), -0.45, materialLeft));
+    world.add(new Sphere(new Point3D(1.0, 0.0, -1.0), 0.5, materialRight));
+
+    const lookfrom = new Point3D(-4, 1, 2);
+    const lookat = new Point3D(0, 0, -1);
+    const vup = new Vec3(0, 1, 0);
+    const fieldOfView = 20;
+    const distToFocus = lookfrom.minus(lookat).length();
+    const aperture = 1.0
+
+    // Camera
+    const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, 0.0, 1.0);
+    */
+
     // World
 
     let world;
@@ -1220,6 +1096,62 @@ function main(renderPattern=null) {
     }
 }
 
+this.onmessage = (event) => {
+    let renderPattern = event.data.renderPattern;
+
+    if (renderPattern !== undefined && renderPattern !== null) {
+        let numRows = (renderPattern.numRows === undefined) ? 1 : renderPattern.numRows;
+        let numCols = (renderPattern.numCols === undefined) ? 1 : renderPattern.numCols;
+        numRows = (numRows < 1) ? 1 : numRows;
+        numCols = (numCols < 1) ? 1 : numRows;
+
+        let pattern = renderPattern.pattern.toLowerCase();
+
+        if (pattern === "random") {
+            let patterns = [
+                "random-points",
+                "outside-in",
+                "iter-box" // proxy for left-up-row below so 1/3 chance of happening
+            ];
+            pattern = patterns[randomInt(0, patterns.length - 1)];
+
+            if (pattern === "iter-box") {
+                patterns = [
+                    "left-up-row", "right-up-row", "left-down-row", "right-down-row",
+                    "left-up-col", "right-up-col", "left-down-col", "right-down-col"
+                ];
+                pattern = patterns[randomInt(0, patterns.length - 1)];
+            }
+        }
+
+        switch (pattern) {
+            case "random-points":
+                renderPattern = boxesPattern(numRows, numCols, randomPointsInBox);
+                break;
+            case "outside-in":
+                renderPattern = boxesPattern(numRows, numCols, pointsFromOutsideIn);
+                break;
+
+            case "left-up-row":
+            case "right-up-row":
+            case "left-down-row":
+            case "right-down-row":
+            case "left-up-col":
+            case "right-up-col":
+            case "left-down-col":
+            case "right-down-col":
+                let [toRight, toBottom, row] = [pattern.includes("right"), pattern.includes("down"), pattern.includes("row")];
+                renderPattern = boxesPattern(numRows, numCols, iterBoxGen(toRight, toBottom, row));
+                break;
+
+            default:
+                renderPattern = null;
+        }
+    }
+
+    main(renderPattern);
+}
+
 // Helper Functions
 
 function twoPerlinSpheres() {
@@ -1289,6 +1221,186 @@ function randomScene() {
 
     return world;
 }
-</pre></code>
-</div>
-{% endblock %}
+
+
+// ---------------------------------------------------------------------------
+// Render Patterns
+
+function divImage(numCols, numRows, imageWidth, imageHeight, callback) {
+    if (imageWidth < numCols) numCols = imageWidth;
+    if (imageHeight < numRows) numRows = imageHeight;
+
+    const boxWidth = Math.ceil(imageWidth / numCols);
+    const boxHeight = Math.ceil(imageHeight / numRows);
+
+    for (let y = 0; y < imageHeight; y += boxHeight) {
+        for (let x = 0; x < imageWidth; x += boxWidth) {
+            let [left, right, top, bottom] = [x, x + boxWidth, y, y + boxHeight];
+
+            // Gaurantee that the square is inside the Image (although might be slightly smaller than other squares)
+            //left = clamp(left, 0, imageWidth);
+            //right = clamp(right, 0, imageWidth);
+            //top = clamp(top, 0, imageHeight);
+            //bottom = clamp(bottom, 0, imageHeight);
+
+            // Gaurantee that the standard Graphics coordinate system is in use
+            // with positive y going down and negative y going up
+            if (left > right) [left, right] = [right, left];
+            if (top > bottom) [top, bottom] = [bottom, top];
+
+            // Call the callback with the dimensions of the current box
+            callback(left, right, top, bottom);
+        }
+    }
+}
+
+function* iterBox(left, right, top, bottom, leftToRight=true, topToBottom=true, rowMajor=true) {
+    let [colStart, colEnd, colDelta] = leftToRight ? [left, right + 1, 1] : [right, left - 1, -1];
+    let [rowStart, rowEnd, rowDelta] = topToBottom ? [top, bottom + 1, 1] : [bottom, top - 1, -1];
+
+    if (rowMajor) {
+        for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+            for (let col = colStart; col !== colEnd; col += colDelta) {
+                yield [col, row];
+            }
+        }
+    } else {
+        for (let col = colStart; col !== colEnd; col += colDelta) {
+            for (let row = rowStart; row !== rowEnd; row += rowDelta) {
+                yield [col, row];
+            }
+        }
+    }
+}
+
+function iterBoxGen(leftToRight=true, topToBottom=true, rowMajor=true) {
+    function iterBoxWrapper(left, right, top, bottom) {
+        return iterBox(left, right, top, bottom, leftToRight, topToBottom, rowMajor);
+    }
+    return iterBoxWrapper;
+}
+
+function* pointsFromOutsideIn(left, right, top, bottom) {
+    // Don't know why but need to shift box to not miss left and top edges on
+    // left and top sides of full image
+    left--; right--; top--; bottom--;
+
+    let x = left; 
+    let y = bottom; 
+
+    let direction = 0; // 0 = left-right, 1 = bottom-top, 2 = right-left, 3 = top-bottom
+
+    function move(x, y, direction) {
+        switch (direction) {
+            case 0: x++; break;
+            case 1: y--; break;
+            case 2: x--; break;
+            case 3: y++; break;
+        }
+        return [x, y];
+    }
+
+    function shrinkBox(direction, left, right, top, bottom) {
+        switch (direction) {
+            case 0: top++; break;
+            case 1: left++; break;
+            case 2: bottom--; break;
+            case 3: right--; break;
+        }
+        return [left, right, top, bottom];
+    }
+
+    while (true) {
+        yield [x, y];
+
+        let [nextX, nextY] = move(x, y, direction);
+
+        if (!inBox(nextX, nextY, left, right, top, bottom)) {
+            [left, right, top, bottom] = shrinkBox(direction, left, right, top, bottom);
+            direction = (direction + 1) % 4;
+
+            [nextX, nextY] = move(x, y, direction);
+
+            if (!inBox(nextX, nextY, left, right, top, bottom)) {
+                break;
+            }
+        }
+
+        [x, y] = [nextX, nextY];
+    }
+}
+
+function* randomPointsInBox(left, right, top, bottom) {
+    const points = [];
+
+    for (let y = top; y < bottom; y++) {
+        for (let x = left; x < right; x++) {
+            points.push([x, y]);
+        }
+    }
+
+    while (0 < points.length) {
+        let i = randomInt(0, points.length - 1);
+        yield points.splice(i, 1)[0];
+    }
+}
+
+function boxesPattern(numRows, numCols, genTemplate) {
+    function* boxesPatternGen(imageWidth, imageHeight) {
+        const renderGens = [];
+
+        divImage(numRows, numCols, imageWidth, imageHeight, (left, right, top, bottom) => {
+            renderGens.push(genTemplate(left, right, top, bottom));
+        });
+
+        while (0 < renderGens.length) {
+            const yieldPoints = [];
+
+            let i = 0;
+            while (i < renderGens.length) {
+                let ret = renderGens[i].next();
+
+                if (ret.done) {
+                    renderGens.splice(i, 1);
+                    continue;
+                }
+
+                yieldPoints.push(ret.value);
+                i++;
+            }
+
+            yield yieldPoints;
+        }
+    }
+    return boxesPatternGen;
+}
+
+
+
+/**
+ * Helper function that only allows you to log something using it a set number
+ * of times, that way the website does not break because you tried to log something
+ * 100000000000 times because this only lets you log it numTimes number of times before
+ * it does not log anything else
+ */
+function safeLogger(numTimes=10, logToString=false) {
+    function log() {
+        if (numTimes > 0) {
+            if (logToString) {
+                let args = [];
+                for (let arg of arguments) {
+                    args.push(arg.toString());
+                }
+                console.log(...args);
+            } else {
+                console.log(...arguments);
+            }
+            numTimes--;
+        }
+
+        if (arguments.length === 1) {
+            return arguments[0];
+        }
+    }
+    return log;
+}

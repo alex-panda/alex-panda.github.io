@@ -993,7 +993,7 @@ function main(renderPattern=null) {
     let fieldOfView = 20.0;
     let aperture = 0.1;
 
-    switch (0) {
+    switch (2) {
         case 1:
             world = randomScene();
             lookfrom = new Point3D(13, 2, 3);

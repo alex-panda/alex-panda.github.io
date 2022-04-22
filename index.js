@@ -16,3 +16,4 @@ function navBtn(btnID, destination) {
 navBtn("#raytracer1-nav", "raytracerPage1.html");
 navBtn("#raytracer2-nav", "raytracerPage2.html");
 navBtn("#raytracer3-nav", "raytracerPage3.html");
+navBtn("#raytracer4-nav", "raytracerPage4.html");

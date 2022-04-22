@@ -26,4 +26,5 @@ renderTemplate("raytracerPage1.html", out_name="index.html")
 renderTemplate("raytracerPage1.html")
 renderTemplate("raytracerPage2.html")
 renderTemplate("raytracerPage3.html")
+renderTemplate("raytracerPage4.html")
 

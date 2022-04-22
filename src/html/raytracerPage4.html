@@ -1,0 +1,29 @@
+{% extends "./base.html" %}
+
+{% block js_head %}
+<script type="module" src="raytracer4.js" defer></script>
+{% endblock %}
+
+{% block main %}
+<div id="raytracer-main">
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas1"></canvas>
+    </div>
+
+    <ul>
+        <li>My Goals</li>
+        <li>My Results</li>
+        <li>My Work</li>
+        <li>What I Learned</li>
+    </ul>
+    <!--
+    <p>
+        Here is the source code as it was at the end of this stage of development:
+    </p>
+
+<code><pre>
+</pre></code>
+-->
+</div>
+{% endblock %}

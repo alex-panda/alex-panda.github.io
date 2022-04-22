@@ -5,6 +5,7 @@ function randomInt(min=0, max=1) {
     return (min + Math.round((max - min) * Math.random()));
 }
 
+// Gets the data from an image and returns the data in the form { width: Number, height:Number, data:UInt8ClampedArray }
 function imageData(image) {
     var canvas = document.createElement('canvas');
     let [width, height] = [image.width, image.height];
@@ -14,7 +15,6 @@ function imageData(image) {
     context.drawImage(image, 0, 0, width, height);
 
     let data = context.getImageData(0, 0, width, height);
-
     return data;
 }
 
@@ -63,6 +63,7 @@ if (typeof(Worker) !== undefined) {
         w.postMessage({renderPattern:renderPattern, images: images});
     }
 
+    /*
     let earth = new Image();
 
     let afterLoadFunc = function() {
@@ -75,6 +76,28 @@ if (typeof(Worker) !== undefined) {
 
     earth.onload = afterLoadFunc;
     earth.src = "assets/earthmap.jpg";
+    */
+
+
+    /*
+    let earth = new Image();
+    let afterLoadFunc = function() {
+        startWorker("./raytracer4Worker2.js", "#raytracer-out-canvas1", 
+                {
+                    numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
+                    pattern:"random"
+                }, 0, -1, 0, 0, {earthmap:imageData(earth)});
+    }
+
+    earth.onload = afterLoadFunc;
+    earth.src = "assets/earthmap.jpg";
+    */
+
+    startWorker("./raytracer4Worker3.js", "#raytracer-out-canvas1", 
+            {
+                numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
+                pattern:"random"
+            }, 0, -1, 0, 0);
 
 } else {
     alert("Web workers are not supported by your browser so the ray tracing can't happen.");

@@ -343,6 +343,44 @@ class MovingSphere extends Hittable {
     }
 }
 
+class XYRect extends Hittable {
+    constructor(x0, x1, y0, y1, k, material) {
+        super();
+        this.x0 = x0;
+        this.x1 = x1;
+        this.y0 = y0;
+        this.y1 = y1;
+        this.k = k;
+        this.mp = material;
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let t = (this.k - ray.origin.z) / ray.direction.z;
+
+        if (t < tMin || t > tMax) return false;
+
+        let x = ray.origin.x + t * ray.direction.x;
+        let y = ray.origin.y + t * ray.direction.y;
+
+        if (x < this.x0 || x > this.x1 || y < this.y0 || y > this.y1) return false;
+
+        hitRecord.u = (x - this.x0) / (this.x1 - this.x0);
+        hitRecord.v = (y - this.y0) / (this.y1 - this.y0);
+        hitRecord.t = t;
+
+        let outwardNormal = new Vec3(0, 0, 1);
+        hitRecord.setFaceNormal(ray, outwardNormal);
+        hitRecord.matPtr = this.mp;
+        hitRecord.p = ray.at(t);
+        return true;
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = new AABB(new Point3D(this.x0, this.y0, this.k - 0.0001), new Point3D(this.x1, this.y1, this.k + 0.0001));
+        return true;
+    }
+}
+
 class HittableList {
     constructor() {
         this.hittables = [];
@@ -393,6 +431,10 @@ class Material {
 
     toString() {
         return `<Material()>`
+    }
+
+    emitted(u, v, p) {
+        return new Color(0, 0, 0);
     }
 }
 
@@ -482,9 +524,31 @@ class Dielectric extends Material {
     }
 }
 
+class DiffuseLight extends Material {
+    constructor(texture) {
+        super();
+        if (texture instanceof Vec3) {
+            // Texture is actually just a color right now, so make it into a Texture
+            this.emit = new SolidColor(texture);
+        } else {
+            this.emit = texture;
+        }
+    }
+
+    scatter(rIn, hitRecord) {
+        return false;
+    }
+
+    emitted(u, v, p) {
+        return this.emit.value(u, v, p);
+    }
+}
+
+
 // Represents an Axis-Aligned Bounding Box
-class AABB {
+class AABB extends Hittable {
     constructor(a, b) {
+        super();
         if (a === undefined) a = new Vec3();
         if (b === undefined) b = new Vec3();
         this.min = a; // Point3D
@@ -954,33 +1018,31 @@ function boxZCompare(a, b) {
 // ----------------------------------------------------------------------------
 // Render
 
-function rayColor(ray, world, depth) {
+function rayColor(ray, background, world, depth) {
     let hitRecord = new HitRecord();
 
     if (depth <= 0) {
         return new Color(0.0, 0.0, 0.0);
     }
 
-    if (world.hitBy(ray, 0.001, Infinity, hitRecord)) {
-        if (hitRecord.matPtr.scatter(ray, hitRecord)) {
-            let color = rayColor(hitRecord.matPtr.scattered, world, depth - 1);
-            return hitRecord.matPtr.attenuation.times(color);
-        }
-        return new Color(0.0, 0.0, 0.0);
+    // If the ray hits nothing, return the background color.
+
+    if (!world.hitBy(ray, 0.001, Infinity, hitRecord)) {
+        return background;
     }
 
-    // Background
-    let unitDirection = ray.direction.unitVector();
-    let t = 0.5 * (unitDirection.y + 1.0);
-    return WHITE.timesNum(1.0 - t).plus((new Color(0.5, 0.7, 1.0)).timesNum(t));
+    let emitted = hitRecord.matPtr.emitted(hitRecord.u, hitRecord.v, hitRecord.p);
+
+    if (!hitRecord.matPtr.scatter(ray, hitRecord)) {
+        return emitted;
+    }
+
+    let res = emitted.plus(hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, background, world, depth - 1)))
+    return res;
 }
 
 /**
- * The main function. It asyncronously waits for every row of the raytraced
- * image to be rendered, then writes the resulting colors to the canvas.
- * 
- * Uses async so that the rendering is non-blocking and thus the internet
- * browser will not seize up.
+ * The main function that renders the current scene.
  */
 function main(renderPattern=null, images=null) {
 
@@ -988,7 +1050,6 @@ function main(renderPattern=null, images=null) {
     const ASPECT_RATIO = 16.0 / 9.0;
     const IMAGE_WIDTH = 400.0;
     const IMAGE_HEIGHT = Math.round(IMAGE_WIDTH / ASPECT_RATIO);
-    const SAMPLES_PER_PIXEL = 100;
     const MAX_DEPTH = 50;
 
     const newlyRenderedPixels = [];
@@ -1004,10 +1065,13 @@ function main(renderPattern=null, images=null) {
     let lookfrom, lookat;
     let fieldOfView = 20.0;
     let aperture = 0.1;
+    let samples_per_pixel = 100;
+    let background = new Color(0, 0, 0);
 
     switch (0) {
         case 1:
             world = randomScene();
+            background = new Color(0.70, 0.80, 1.00);
             lookfrom = new Point3D(13, 2, 3);
             lookat = new Point3D(0, 0, 0);
             fieldOfView = 20.0;
@@ -1015,22 +1079,35 @@ function main(renderPattern=null, images=null) {
             break
         case 2:
             world = twoSpheres();
-            lookfrom = new Point3D(13, 2, 3);
-            lookat = new Point3D(0, 0, 0);
-            fieldOfView = 20.0;
-            break;
-        case 3:
-            world = twoPerlinSpheres();
+            background = new Color(0.70, 0.80, 1.00);
             lookfrom = new Point3D(13, 2, 3);
             lookat = new Point3D(0, 0, 0);
             fieldOfView = 20.0;
             break;
 
-        default:
-        case 4:
-            world = earth(images.earthmap);
+        case 3:
+            world = twoPerlinSpheres();
+            background = new Color(0.70, 0.80, 1.00);
             lookfrom = new Point3D(13, 2, 3);
             lookat = new Point3D(0, 0, 0);
+            fieldOfView = 20.0;
+            break;
+
+        case 4:
+            world = earth(images.earthmap);
+            background = new Color(0.70, 0.80, 1.00);
+            lookfrom = new Point3D(13, 2, 3);
+            lookat = new Point3D(0, 0, 0);
+            vfov = 20.0;
+            break;
+        
+        default:
+        case 5:
+            world = earthLight(images.earthmap);
+            samples_per_pixel = 500;
+            background = new Color(0, 0, 0);
+            lookfrom = new Point3D(26, 3, 6);
+            lookat = new Point3D(0, 2, 0);
             vfov = 20.0;
             break;
     }
@@ -1052,10 +1129,10 @@ function main(renderPattern=null, images=null) {
         let pixelColor = new Color(0, 0, 0);
 
         // Take a bunch of samples around the pixel to do antialiasing
-        for (let s = 0; s < SAMPLES_PER_PIXEL; ++s) {
+        for (let s = 0; s < samples_per_pixel; ++s) {
             let u = (x + randomDouble(0, 1.0)) / (IMAGE_WIDTH - 1);
             let v = (y + randomDouble(0, 1.0)) / (IMAGE_HEIGHT - 1);
-            pixelColor.plusEq(rayColor(camera.getRay(u, v), world, MAX_DEPTH));
+            pixelColor.plusEq(rayColor(camera.getRay(u, v), background, world, MAX_DEPTH));
         }
 
         // Figure out value of the antialiased pixel
@@ -1063,12 +1140,12 @@ function main(renderPattern=null, images=null) {
 
         // Divide the color by the number of samples and gamma-correct for
         // gamma=2.0
-        const scale = 1.0 / SAMPLES_PER_PIXEL;
+        const scale = 1.0 / samples_per_pixel;
         r = Math.sqrt(r * scale);
         g = Math.sqrt(g * scale);
         b = Math.sqrt(b * scale);
 
-        writePixel(x, y, 256 * clamp(r, 0.0, 1.0), 256 * clamp(g, 0.0, 1.0), 256 * clamp(b, 0.0, 1.0));
+        writePixel(x, y, 255 * clamp(r, 0.0, 1.0), 255 * clamp(g, 0.0, 1.0), 255 * clamp(b, 0.0, 1.0));
     }
 
     if (!(renderPattern instanceof Function)) {
@@ -1175,9 +1252,22 @@ this.onmessage = (event) => {
 
 // Helper Functions
 
+function earthLight(earthmap) {
+    let world = new HittableList();
+
+    let earthTexture = new ImageTexture(earthmap);
+    world.add(new Sphere(new Point3D(0, -1000, 0), 1000, new Lambertian(earthTexture)));
+    world.add(new Sphere(new Point3D(0, 2, 0), 2, new Lambertian(earthTexture)));
+
+    let difflight = new DiffuseLight(new Color(5, 5, 5)); // Light is over 1, 1, 1 so that it produces enough light to light up the other objects in the scene
+    world.add(new XYRect(3, 5, 1, 3, -2, difflight));
+
+    return world;
+}
+
 function earth(earthmap) {
     if (earthmap == undefined) {
-        throw new AssertionError("earthmap was undefined!");
+        throw new Error("earthmap was undefined!");
     }
 
     let world = new HittableList();

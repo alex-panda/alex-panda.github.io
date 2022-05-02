@@ -1768,24 +1768,24 @@ function cornellBox(scale=1) {
     let red = new Lambertian(new Color(0.65, 0.05, 0.05));
     let white = new Lambertian(new Color(0.73, 0.73, 0.73));
     let green = new Lambertian(new Color(0.12, 0.45, 0.15));
-    let light = new DiffuseLight(new Color(15, 15, 15));
+    let light = new DiffuseLight(new Color(7, 7, 7));
 
     world.add(new YZRect(0, 555*scale, 0, 555*scale, 555*scale, green));
     world.add(new YZRect(0, 555*scale, 0, 555*scale, 0, red));
 
-    world.add(new XZRect(213*scale, 343*scale, 227*scale, 332*scale, 554*scale, light));
+    world.add(new XZRect(113*scale, 443*scale, 127*scale, 432*scale, 554*scale, light));
     world.add(new XZRect(0, 555*scale, 0, 555*scale, 0, white));
     world.add(new XZRect(0, 555*scale, 0, 555*scale, 555*scale, white));
 
     world.add(new XYRect(0, 555*scale, 0, 555*scale, 555*scale, white));
 
     let box1 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 330*scale, 165*scale), white);
-    //box1 = new RotateY(box1, 15); // Rotate 15 degrees
+    box1 = new RotateY(box1, 15); // Rotate 15 degrees
     box1 = new Translate(box1, new Vec3(265*scale, 0, 295*scale)); // Translate it into place
     world.add(box1);
 
     let box2 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 165*scale, 165*scale), white);
-    //box2 = new RotateY(box2, -18);
+    box2 = new RotateY(box2, -18);
     box2 = new Translate(box2, new Vec3(130*scale, 0, 65*scale));
     world.add(box2);
 

@@ -1117,7 +1117,7 @@ function main(renderPattern=null, images=null) {
     const time0 = 0;
     const time1 = 1;
 
-    world = new BvhNode(world, time0, time1);
+    //world = new BvhNode(world, time0, time1);
 
     // Camera
     const camera = new Camera(lookfrom, lookat, vup, fieldOfView, ASPECT_RATIO, aperture, distToFocus, time0, time1);
@@ -1261,6 +1261,8 @@ function earthLight(earthmap) {
 
     let difflight = new DiffuseLight(new Color(5, 5, 5)); // Light is over 1, 1, 1 so that it produces enough light to light up the other objects in the scene
     world.add(new XYRect(3, 5, 1, 3, -2, difflight));
+
+    world.add(new Sphere(new Point3D(-4, 4, 4), 1, difflight));
 
     return world;
 }

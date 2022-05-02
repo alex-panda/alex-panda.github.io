@@ -67,23 +67,23 @@ if (typeof(Worker) !== undefined) {
     let earth = new Image();
 
     let afterLoadFunc = function() {
-        startWorker("./raytracer4Worker1.js", "#raytracer-out-canvas1", 
+        startWorker("./raytracer4Worker3.js", "#raytracer-out-canvas1", 
                 {
                     numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
                     pattern:"random"
-                }, 0, -1, 0, 0, {earthmap:imageData(earth)});
+                }, 0, -1, 0, 0, {earthmap:imageData(earth)}, 3);
 
         startWorker("./raytracer4Worker3.js", "#raytracer-out-canvas2", 
                 {
                     numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
                     pattern:"random"
-                }, 0, -1, 0, 0, {earthmap:imageData(earth)}, 5);
+                }, 0, -1, 0, 0, {earthmap:imageData(earth)}, 1);
 
         startWorker("./raytracer4Worker3.js", "#raytracer-out-canvas3", 
                 {
                     numRows:randomInt(1, 8), numCols:randomInt(1, 8), 
                     pattern:"random"
-                }, 0, -1, 0, 0, {earthmap:imageData(earth)});
+                }, 0, -1, 0, 0, {earthmap:imageData(earth)}, 6);
 
         startWorker("./raytracer4Worker3.js", "#raytracer-out-canvas4", 
                 {

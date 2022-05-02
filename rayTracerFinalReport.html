@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="author" content="Alexander Peseckis">
+        <meta name="description" content="Alexander Peseckis' Personal Website">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="keywords" content=" HTML, CSS, JavaScript ">
+
+        
+        <link rel="stylesheet" type="text/css" href="index.css" />
+        
+
+        <script type="module" src="index.js" defer></script>
+
+        
+<script type="module" src="raytracerFinal.js" defer></script>
+
+    </head>
+
+    <body>
+        <div id="left-col">
+        </div>
+
+        <div id="middle-col">
+            <header>
+                <nav>
+                    
+                    <button id="raytracer1-nav" class="nav-btn" type="button">Ray Tracer Page 1</button>
+                    <button id="raytracer2-nav" class="nav-btn" type="button">Ray Tracer Page 2</button>
+                    <button id="raytracer3-nav" class="nav-btn" type="button">Ray Tracer Page 3</button>
+                    <button id="raytracer4-nav" class="nav-btn" type="button">Ray Tracer Page 4</button>
+                    <button id="raytracer5-nav" class="nav-btn" type="button">Final Report</button>
+                    
+                </nav>
+            </header>
+
+            <main>
+                
+<div id="raytracer-main">
+
+    <p>
+        I have typed up a written report here, at the top of the page, but if
+        you scroll past the renders to the bottom of the page you can see a
+        list version of my report which is more detailed in some ways and less
+        detailed in others.
+    </p>
+
+    <h4> Results </h4>
+
+    <p>
+        For my project, I have created a ray tracer that can run asyncronously
+        in the browser and render images for the user in real time as they
+        browse the page. I did this by following 2 textbooks ("Ray
+        Tracing in One Weekend" and "Ray Tracing: The Next Week") and
+        putting in many ours of work to research how to build a website using 
+        CSS, HTML, and JavaScript that could do so asyncronously. The ray tracer
+        can be used by copying one of the "raytracer#Worker#.js" files and
+        editing it to render whatever scene you want it to. So long as you load
+        the file as a web worker, it will have asyncronous functionality. While
+        it does not have the functionality implemented to allow the programmer
+        to call it and pass their own scene without editing
+        the file, this functionality could be implemented by editing the "main"
+        function of the "raytracer#Worker#.js" file to accept information about
+        objects in the scene to render.
+    </p>
+
+    <h4> Work </h4>
+
+    <p>
+        I have put many hours of work into this project. Initially, these hours
+        were mainly put into learning JavaScript, HTML, CSS and how to build a
+        website. It took several tries to make the website itself, and all but
+        the last try was discarded. I started out by making the website using
+        Python flask but that is not for static websites as GitHub requires so
+        I then tried making the website without a website builder. That was too
+        tedius so I tried to make the website using JavaScript to hold the HTML
+        files in strings and then load the string into the DOM when the page is
+        pulled up. That worked but the fact that the HTML pages were in JavaScript
+        strings was very annoying so I finally settled on Python Jinja2 to build
+        the website and that is what the website uses now.
+    </p>
+
+    <p>
+        After I figured out how the website would work, most of my time went
+        into writing and debugging the ray tracer, with the debugging taking
+        much more time and being much more difficult than actually writing the
+        code. I think it took me somewhere around 3 hours of debugging for
+        every hour of actually writing the code for the ray tracer and I think
+        that this is mainly because of the fact that the ray tracer
+        is very intricate with all of its peices working together towards the
+        task of rendering each image. This means that every bug could have its
+        cause be anywhere in the code as practically every line of code is used during
+        every render (at least for the more complex renders).
+    </p>
+
+    <h4> Learned </h4>
+
+    <p>
+        I learned a great deal from this project. At the beginning, I
+        learned JavaScript, CSS, and HTML without any prior knowledge
+        of them. I also learned how to build a flat-pages website so
+        that it could be hosted on GitHub. I then learned all the
+        intricaces of building a ray tracer from scratch and making it
+        work on the website in real time from the first moment the website is
+        opened or refreshed. A list of a few more of the things I feel I have learned
+        from this experience is provided below the example renders below.
+    </p>
+
+    <h4> Self-Evaluation </h4>
+
+    <p>
+        I am very happy with how my project turned out. I learned a great deal from
+        it and am very proud of my work. If I did it again, I would probably do the first
+        textbook and half of the second because 2 full textbooks was a little bit too much
+        work to do on top of my coursework over the semester, but other than that I think
+        I would do the rest of it the same way. If I someone else was going to start a
+        similar project, I would tell them to make sure to budget enough time for it because
+        I know that if I had not then there is no way I would have finished the project
+        before the end of the semester.
+    </p>
+
+    <h4> Example Renders </h4>
+
+    <p>
+        Here are a renders from the ray tracer itself being rendered in real time
+        from the moment you open or refresh the page.
+    </p>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas1"></canvas>
+    </div>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas2"></canvas>
+    </div>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas3"></canvas>
+    </div>
+
+    <div class="canvas-area center">
+        <canvas id="raytracer-out-canvas4"></canvas>
+    </div>
+
+    <ul>
+        <li>My Results</li>
+        <ul>
+            <li>Over the course of completing "Ray Tracing in One Weekend", I</li>
+            <ul>
+                <li>learned JavaScript enough to be able to begin
+                coding the ray tracer in the programming language.</li>
+
+                <li>made a vector class for doing calculations in a 3D space by using 3D points and for representing RGB colors.</li>
+                <li>implemented a camera for looking into the world.</li>
+                <li>created an abstract base class for hittable objects so that eventually more than one shape can be put in the ray tracer's world and thus seen in it.</li>
+                <li>made a hittable sphere class for representing spheres in the world that can be hit by light rays and thus looked at by the ray tracer.</li>
+                <li>coded a hittable list so that the ray tracer can handle having multiple objects in the world.</li>
+                <li>wrote a main function that ray traces the image produced by the current world and camera and outputs the result to an HTML canvas for user viewership.</li>
+                <li>implemented antialiasing.</li>
+                <li>improved camera manipulation by creating a Camera object that can: be positioned, be tilted, be rotated, have its field of view changed, have its aperature specified, have its aspect ratio set, and have its focus distance set.</li>
+                <li>created a system that allows different materials for different objects:</li>
+                <ul>
+                    <li>Lambertian material for matte objects.</li>
+                    <li>Metal material for metal objects that reflect light to various degrees.</li>
+                    <li>Dialectric material for objects that refract light such as glass.</li>
+                </ul>
+            </ul>
+            <li>While completing "Ray Tracing: The Next Week", I</li>
+            <ul>
+                <li>implemented motion blur.</li>
+                <li>improved the render times by making hit-tests happen in O(log[base 2](N)) time using Axis-Aligned-Bounding-Boxes.</li>
+                <li>made it so that simple textures can now be used on the objects.</li>
+                <li>created a texture complex enough to look like marbled-stone.</li>
+                <li>coded rectangles/boxes so now they can be used along with spheres.</li>
+                <li>implemented materials that emit light so that spheres and boxes can now be used as light sources.</li>
+                <li>made it possible to translate and rotate objects.</li>
+                <li>improved objects so that they can now be made to mimic volumes such as fog and mist.</li>
+            </ul>
+            <li>Outside of the work prescribed by the two textbooks I followed, I also</li>
+            <ul>
+                <li>learned JavaScript from scratch.</li>
+                <li>created a flatpage website that will work on GitHub Pages.</li>
+                <li>learned python Jinja and used it for html generation of the website.</li>
+                <li>implemented asyncronous functionality so that the ray tracer can asyncrounously render the image in the background while the user views the webpage.</li>
+            </ul>
+        </ul>
+        <li>My Work</li>
+        <ul>
+            <li>I spent multiple weeks learning JavaScript/HTML/CSS from scratch.</li>
+            <li>I spent multiple days trying to build my GitHub Pages website using Python flask as an HTML generator. That did not work out, so now I am using a bunch of flat HTML pages with Python Jinja.</li>
+            <li>It took me many days to go through the first textbook "Ray Tracing in One Weekend", the second textbook "Ray Tracing: The Next Week," write the code for the ray tracer, and debug the issues my code had.</li>
+        </ul>
+        <li>What I Learned</li>
+        <ul>
+            <li>HTML</li>
+            <ul>
+                <li>the DOM</li>
+                <li>how HTML documents are generally formatted</li>
+                <li>what HTML elements exist</li>
+                <li>how HTML elements interact with one another</li>
+            </ul>
+
+            <li>CSS</li>
+            <ul>
+                <li>general layout</li>
+                <li>selecting classes vs tags vs ids</li>
+                <li>the styling available for each HTML element</li>
+                <li>how to position elements using CSS</li>
+                <li>CSS Grid</li>
+            </ul>
+
+            <li>JavaScript (while I have learned other programming languages before, I had to learn how many things look/work in JavaScript in particular)</li>
+            <ul>
+                <li>What JavaScript classes, loops, conditionals, variables, look like.</li>
+                <li>How functions work in JavaScript.</li>
+                <li>How to do asyncronous programming in JavaScript.</li>
+                <li>How JavaScript does event handling.</li>
+                <li>How to access/manipulate HTML elements and the DOM.</li>
+                <li>How async-await works in JavaScript.</li>
+                <li>How async-await is DOM-blocking in JavaScript, causing the page to not load until all the rendering is complete even if the rendering is happening asyncronously in the background.</li>
+                <li>How to use Web Workers to run code asyncronously without blocking the DOM.</li>
+            </ul>
+
+            <li>How to create a ray tracer.</li>
+            <ul>
+                <li>How colors work on the computer.</li>
+                <li>How to trace a ray and see what it hits in a 3D space.</li>
+                <li>How to create objects that can be hit by a ray.</li>
+                <li>How to handle having multiple objects in the ray tracer's world.</li>
+                <li>How to color a pixel based on what a ray from the pixel into the world hit.</li>
+                <li>How to differentiate hitting the frontside or backside of an object with a ray.</li>
+                <li>How antialiasing works and how to implement it.</li>
+                <li>How to give objects different materials.</li>
+                <li>How different materials affect light differently.</li>
+                <li>How to implement the different ways that matte, reflective, and refractive materials affect light.</li>
+                <li>How to make a camera more versitile with various features such as position, tilt, rotation, field of view, aperature, and focus distance.</li>
+                <li>How to represent moving objects.</li>
+                <li>How to make moving objects have motion blur.</li>
+                <li>What Axis Aligned Bounding Boxes (AABBs) are.</li>
+                <li>How to create a tree of AABBs and greatly reduce the time it takes to do hit-tests and thus the time it takes to render an image.</li>
+                <li>How to implement textures.</li>
+                <li>What Perlin noise is and how to generate it.</li>
+                <li>How to make Perlin noise into a texture so that it can be put on objects.</li>
+                <li>How to represent rectangles in 3D space.</li>
+                <li>How to make objects emit light and light up the scene.</li>
+                <li>How to translate objects.</li>
+                <li>How to rotate objects.</li>
+                <li>How to represent volumes like fog using objects.</li>
+            </ul>
+        </ul>
+    </ul>
+
+    <p>
+        The full code for the ray tracer at all of its stages can be found in
+        the "raytracer#Worker#.js" files at
+        https://github.com/alex-panda/alex-panda.github.io
+    </p>
+</div>
+
+            </main>
+
+            <footer>
+            </footer>
+        </div>
+
+        <div id="right-col">
+        </div>
+    </body>
+</html>

@@ -26,6 +26,15 @@ class Vec3 {
         }
     }
 
+    set(num, val) {
+        switch (num) {
+            case 0: this.x = val; break;
+            case 1: this.y = val; break;
+            case 2: this.z = val; break;
+            default: throw new Error(`${num} is not a valid index of the vector.`);
+        }
+    }
+
     toString() {
         return `<Vec3(${this.x}, ${this.y}, ${this.z})>`;
     }
@@ -34,10 +43,6 @@ class Vec3 {
         // Return true if the vector is close to zero in all dimensions
         const s = Math.pow(10, -8);
         return ((Math.abs(this.x) < s) && (Math.abs(this.y) < s) && (Math.abs(this.z) < s));
-    }
-
-    random(min=0.0, max=1.0) {
-        return new this.constructor(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
     }
 
     copy() {
@@ -355,12 +360,15 @@ class XYRect extends Hittable {
     }
 
     hitBy(ray, tMin, tMax, hitRecord) {
-        let t = (this.k - ray.origin.z) / ray.direction.z;
+        let origin = ray.origin;
+        let direction = ray.direction;
+
+        let t = (this.k - origin.z) / direction.z;
 
         if (t < tMin || t > tMax) return false;
 
-        let x = ray.origin.x + t * ray.direction.x;
-        let y = ray.origin.y + t * ray.direction.y;
+        let x = origin.x + t * direction.x;
+        let y = origin.y + t * direction.y;
 
         if (x < this.x0 || x > this.x1 || y < this.y0 || y > this.y1) return false;
 
@@ -376,7 +384,8 @@ class XYRect extends Hittable {
     }
 
     boundingBox(time0, time1) {
-        this.outputBox = new AABB(new Point3D(this.x0, this.y0, this.k - 0.0001), new Point3D(this.x1, this.y1, this.k + 0.0001));
+        this.outputBox = new AABB(new Point3D(this.x0, this.y0, this.k - 0.0001),
+                new Point3D(this.x1, this.y1, this.k + 0.0001));
         return true;
     }
 }
@@ -414,7 +423,8 @@ class XZRect extends Hittable {
     }
 
     boundingBox(time0, time1) {
-        this.outputBox = new AABB(new Point3D(this.x0, this.k - 0.0001, this.z0), new Point3D(this.x1, this.k + 0.0001, this.z1));
+        this.outputBox = new AABB(new Point3D(this.x0, this.k - 0.0001, this.z0),
+                new Point3D(this.x1, this.k + 0.0001, this.z1));
         return true;
     }
 }
@@ -452,8 +462,232 @@ class YZRect extends Hittable {
     }
 
     boundingBox(time0, time1) {
-        this.outputBox = new AABB(new Point3D(this.k - 0.0001, this.y0, this.z0), new Point3D(this.k + 0.0001, this.y1, this.z1));
+        this.outputBox = new AABB(new Point3D(this.k - 0.0001, this.y0, this.z0),
+                new Point3D(this.k + 0.0001, this.y1, this.z1));
         return true;
+    }
+}
+
+class Box extends Hittable {
+    constructor(point0, point1, material) {
+        super();
+
+        this.boxMin = point0;
+        this.boxMax = point1;
+
+        this.sides = new HittableList();
+
+        this.sides.add(new XYRect(point0.x, point1.x, point0.y, point1.y, point1.z, material));
+        this.sides.add(new XYRect(point0.x, point1.x, point0.y, point1.y, point0.z, material));
+
+        this.sides.add(new XZRect(point0.x, point1.x, point0.z, point1.z, point1.y, material));
+        this.sides.add(new XZRect(point0.x, point1.x, point0.z, point1.z, point0.y, material));
+
+        this.sides.add(new YZRect(point0.y, point1.y, point0.z, point1.z, point1.x, material));
+        this.sides.add(new YZRect(point0.y, point1.y, point0.z, point1.z, point0.x, material));
+
+        //this.sides = new BvhNode(this.sides, 0, 1)
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        return this.sides.hitBy(ray, tMin, tMax, hitRecord);
+    }
+
+    boundingBox(time0, time1) {
+        this.outputBox = new AABB(this.boxMin, this.boxMax);
+        return true;
+    }
+}
+
+class Translate extends Hittable {
+    /**
+     * @param {Hittable} p The hittable to translate.
+     * @param {Vec3} displacement the amount to translate it by in xyz
+     */
+    constructor(p, displacement) {
+        super();
+        this.ptr = p;
+        this.offset = displacement;
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let movedR = new Ray(ray.origin.minus(this.offset), ray.direction, ray.time);
+
+        if (!this.ptr.hitBy(movedR, tMin, tMax, hitRecord)) {
+            return false;
+        }
+
+        hitRecord.p.plusEq(this.offset);
+        hitRecord.setFaceNormal(movedR, hitRecord.normal);
+
+        return true;
+    }
+
+    boundingBox(time0, time1) {
+        if (!this.ptr.boundingBox(time0, time1)) {
+            this.outputBox = this.ptr.outputBox;
+            return false;
+        }
+
+        this.outputBox = new AABB(
+            this.ptr.outputBox.min.plus(this.offset),
+            this.ptr.outputBox.max.plus(this.offset),
+        );
+
+        return true;
+    }
+}
+
+
+class RotateY extends Hittable {
+    /**
+     * @param {Hittable} p The hittable to translate.
+     * @param {Number} angle the angle in degrees to rotate the given hittable by around the Y axis
+     */
+    constructor(p, angle) {
+        super();
+        this.ptr = p;
+
+        let radians = degreesToRadians(angle);
+        this.sinTheta = Math.sin(radians);
+        this.cosTheta = Math.cos(radians);
+
+        this.hasBox = this.ptr.boundingBox(0.0, 1.0)
+        this.bbox = this.ptr.outputBox;
+
+        let min = new Vec3(INFINITY, INFINITY, INFINITY);
+        let max = new Vec3(-INFINITY, -INFINITY, -INFINITY);
+
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < 2; j++) {
+                for (let k = 0; k < 2; k++) {
+                    let x = (i * this.bbox.max.x) + ((1.0 - i) * this.bbox.min.x);
+                    let y = (j * this.bbox.max.y) + ((1.0 - j) * this.bbox.min.y);
+                    let z = (k * this.bbox.max.z) + ((1.0 - k) * this.bbox.min.z);
+
+                    let newx =   (this.cosTheta  * x) + (this.sinTheta * z);
+                    let newz = ((-this.sinTheta) * x) + (this.cosTheta * z);
+
+                    let test = new Vec3(newx, y, newz);
+
+                    min.x = Math.min(min.x, test.x);
+                    min.y = Math.min(min.y, test.y);
+                    min.z = Math.min(min.z, test.z);
+
+                    max.x = Math.max(max.x, test.x);
+                    max.y = Math.max(max.y, test.y);
+                    max.z = Math.max(max.z, test.z);
+                }
+            }
+        }
+
+        this.bbox = new AABB(min, max);
+        this.outputBox = this.bbox;
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let origin = ray.origin;
+        let direction = ray.direction;
+
+        // Rotate incoming ray
+
+        let newOrigin = new Vec3(
+            (this.cosTheta * origin.x) - (this.sinTheta * origin.z),
+            origin.y,
+            (this.sinTheta * origin.x) + (this.cosTheta * origin.z)
+        );
+
+        let newDirection = new Vec3(
+            (this.cosTheta * direction.x) - (this.sinTheta * direction.z),
+            direction.y,
+            (this.sinTheta * direction.x) + (this.cosTheta * direction.z)
+        );
+
+        let rotatedR = new Ray(newOrigin, newDirection, ray.time);
+
+        if (!this.ptr.hitBy(rotatedR, tMin, tMax, hitRecord)) {
+            return false;
+        }
+
+        // Rotate hitRecord
+
+        let p = hitRecord.p;
+        let normal = hitRecord.normal;
+
+        let newP = new Vec3(
+             (this.cosTheta * p.x) + (this.sinTheta * p.z),
+            p.y,
+            -(this.sinTheta * p.x) + (this.cosTheta * p.z)
+        );
+
+        let newNormal = new Vec3(
+             (this.cosTheta * normal.x) + (this.sinTheta * normal.z),
+            normal.y,
+            -(this.sinTheta * normal.x) + (this.cosTheta * normal.z)
+        );
+
+        hitRecord.p = newP;
+        hitRecord.setFaceNormal(rotatedR, newNormal);
+
+        return true;
+    }
+
+    boundingBox(time0, time1) {
+        return this.hasBox;
+    }
+}
+
+class ConstantMedium extends Hittable {
+    /**
+     * @param {Hittable} b 
+     * @param {Number} d 
+     * @param {Texture | Color} a 
+     */
+    constructor(b, d, a) {
+        super();
+        this.boundary = b;
+        this.negInvDensitiy = -1/d;
+        this.phaseFunction = new Isotropic(a);
+    }
+
+    hitBy(ray, tMin, tMax, hitRecord) {
+        let rec1 = new HitRecord();
+        let rec2 = new HitRecord();
+
+        if (!this.boundary.hitBy(ray, -INFINITY, INFINITY, rec1))
+            return false;
+
+        if (!this.boundary.hitBy(ray, rec1.t + 0.0001, INFINITY, rec2))
+            return false;
+
+        rec1.t = Math.max(rec1.t, tMin);
+        rec2.t = Math.min(rec2.t, tMax);
+
+        if (rec1.t >= rec2.t)
+            return false;
+
+        rec1.t = Math.max(rec1.t, 0);
+
+        let rayLength = ray.direction.length();
+        let distanceInsideBoundary = (rec2.t - rec1.t) * rayLength;
+        let hitDistance = this.negInvDensitiy * Math.log(randomDouble(0.0, 1.0));
+
+        if (hitDistance > distanceInsideBoundary)
+            return false;
+
+        hitRecord.t = rec1.t + (hitDistance / rayLength);
+        hitRecord.p = ray.at(hitRecord.t);
+
+        hitRecord.normal = new Vec3(1, 0, 0); // Arbitrary
+        hitRecord.frontFace = true; // Also Arbitrary
+        hitRecord.matPtr = this.phaseFunction;
+        return true;
+    }
+
+    boundingBox(time0, time1) {
+        let ret = this.boundary.boundingBox(time0, time1);
+        this.outputBox = this.boundary.outputBox;
+        return ret;
     }
 }
 
@@ -470,17 +704,17 @@ class HittableList {
     boundingBox(time0, time1) {
         if (this.hittables.length === 0) return false;
 
-        let tempBox = new AABB();
+        let tempBox;
         let firstBox = true;
 
         for (let hittable of this.hittables) {
             if (!hittable.boundingBox(time0, time1)) return false;
+            tempBox = hittable.outputBox;
             this.outputBox = firstBox ? tempBox : surroundingBox(this.outputBox, tempBox);
             firstBox = false;
         }
         return true;
     }
-
 
     add(hittable) {
         this.hittables.push(hittable);
@@ -539,6 +773,7 @@ class Lambertian extends Material {
 
         this.scattered = new Ray(hitRecord.p, scatterDirection, rIn.time);
         this.attenuation = this.albedo.value(hitRecord.u, hitRecord.v, hitRecord.p);
+
         return true;
     }
 }
@@ -556,8 +791,12 @@ class Metal extends Material {
 
     scatter(rIn, hitRecord) {
         let reflected = reflect(rIn.direction.unitVector(), hitRecord.normal);
+        this.scattered = new Ray(
+            hitRecord.p, 
+            reflected.plus(randomInUnitSphere().timesNum(this.fuzz)),
+            rIn.time
+        );
 
-        this.scattered = new Ray(hitRecord.p, reflected.plus(randomInUnitSphere().timesNum(this.fuzz)), rIn.time);
         this.attenuation = this.albedo;
         return (this.scattered.direction.dot(hitRecord.normal) > 0);
     }
@@ -622,6 +861,26 @@ class DiffuseLight extends Material {
     }
 }
 
+class Isotropic extends Material {
+    /**
+     * @param {Color | Texture} a 
+     */
+    constructor(a) {
+        super();
+        if (a instanceof Vec3) {
+            this.albedo = new SolidColor(a);
+        } else {
+            this.albedo = a;
+        }
+    }
+
+    scatter(rIn, hitRecord) {
+        this.scattered = new Ray(hitRecord.p, randomInUnitSphere(), rIn.time);
+        this.attenuation = this.albedo.value(hitRecord.u, hitRecord.v, hitRecord.p);
+        return true;
+    }
+}
+
 
 // Represents an Axis-Aligned Bounding Box
 class AABB extends Hittable {
@@ -671,9 +930,9 @@ class BvhNode extends Hittable {
         this.time1 = time1 = time1 ?? 0; // Number
 
         // Things we will calculated below
-        this.box; // Bounding box
-        this.left; // Left Child
-        this.right; // Right Child
+        //this.box; // Bounding box
+        //this.left; // Left Child
+        //this.right; // Right Child
 
         let axis = randomInt(0, 2); // Pick random axis (0=x, 1=y, 2=z)
 
@@ -690,8 +949,7 @@ class BvhNode extends Hittable {
 
         if (hittableSpan === 1) {
             // If only one object in array, then both boxes are that one object
-            this.right = this.hittables[start];
-            this.left = this.right;
+            this.left = this.right = this.hittables[start];
         } else if (hittableSpan === 2) {
             // If only 2 objects are in the array, then choose which one is left and right
             if (comparator(this.hittables[start], this.hittables[start + 1])) {
@@ -705,9 +963,10 @@ class BvhNode extends Hittable {
             // Sort the array from this node's start to end without touching other parts of the array
             const hittablesToSort = this.hittables.slice(start, end);
             hittablesToSort.sort(comparator);
-            this.hittables.splice(start, hittableSpan, ...hittablesToSort);
+            this.hittables.splice(start, hittablesToSort.length, ...hittablesToSort);
+            this.hittables;
 
-            let mid = start + Math.floor(hittableSpan / 2);
+            let mid = Math.floor(start + hittableSpan / 2);
             this.left = new BvhNode(this.hittables, time0, time1, start, mid);
             this.right = new BvhNode(this.hittables, time0, time1, mid, end);
         }
@@ -834,7 +1093,7 @@ class Perlin {
 
         this.ranvec = [];
         for (let i = 0; i < this.pointCount; i++) {
-            this.ranvec.push(Vec3.prototype.random(-1, 1).unitVector());
+            this.ranvec.push(randomVec3(-1, 1).unitVector());
         }
 
         this.permX = this.perlinGeneratePerm();
@@ -858,10 +1117,11 @@ class Perlin {
                 c[di].push([]);
                 for (let dk=0; dk < 2; dk++) {
                     c[di][dj].push(
-                        this.ranvec[this.permX[(i + di) & 255] ^ 
-                                    this.permY[(j + dj) & 255] ^
-                                    this.permZ[(k + dk) & 255]
-                        ]
+                        this.ranvec[Math.floor(
+                            this.permX[Math.floor((i + di) & 255)] ^ 
+                            this.permY[Math.floor((j + dj) & 255)] ^
+                            this.permZ[Math.floor((k + dk) & 255)]
+                        )]
                     );
                 }
             }
@@ -893,9 +1153,9 @@ class Perlin {
     }
 
     perlinInterp(c, u, v, w) {
-        let uu = u*u*(3-2*u);
-        let vv = v*v*(3-2*v);
-        let ww = w*w*(3-2*w);
+        let uu = u * u * (3.0 - (2.0 * u));
+        let vv = v * v * (3.0 - (2.0 * v));
+        let ww = w * w * (3.0 - (2.0 * w));
         let accum = 0.0;
 
         for (let i=0; i < 2; i++) {
@@ -914,7 +1174,7 @@ class Perlin {
 
     turb(p, depth=7) {
         let accum = 0.0;
-        let tempP = p;
+        let tempP = p.copy();
         let weight = 1.0;
 
         for (let i = 0; i < depth; i++) {
@@ -928,14 +1188,16 @@ class Perlin {
 }
 
 class NoiseTexture extends Texture {
-    constructor(scale=0) {
+    constructor(scale=1) {
         super();
         this.scale = scale;
         this.noise = new Perlin();
     }
 
     value(u, v, p) {
-        return (new Color(1, 1, 1)).timesEqNum(0.5).timesEqNum(1 + Math.sin(this.scale * p.z + 10 * this.noise.turb(p)));
+        return (new Color(1, 1, 1))
+            .timesNum(0.5)
+            .timesNum(1 + Math.sin((this.scale * p.z) + (10 * this.noise.turb(p))));
     }
 }
 
@@ -971,14 +1233,19 @@ class Camera {
 
         this.time0 = time0;
         this.time1 = time1;
+        this.random = randomDoubleGen(this.time0, this.time1);
     }
 
     getRay(s, t) {
         let rd = randomInUnitDisk().timesNum(this.lensRadius);
         let offset = this.u.timesNum(rd.x).plus(this.v.timesNum(rd.y));
 
-        let direction = this.lowerLeftCorner.plus(this.horizontal.timesNum(s)).plus(this.vertical.timesNum(t)).minus(this.origin).minus(offset);
-        return new Ray(this.origin.plus(offset), direction, randomDouble(this.time0, this.time1));
+        let direction = this.lowerLeftCorner
+            .plus(this.horizontal.timesNum(s))
+            .plusEq(this.vertical.timesNum(t))
+            .minusEq(this.origin)
+            .minusEq(offset);
+        return new Ray(this.origin.plus(offset), direction, this.random());
     }
 }
 
@@ -987,6 +1254,24 @@ class Camera {
 
 function degreesToRadians(degrees) {
     return degrees * (PI / 180);
+}
+
+/**
+ * Returns a generator that has precomputed `size` random doubles so that
+ *   the retrieval of them is faster than the normal calcu
+ */
+function randomDoubleGen(min=0.0, max=1.0, size=1e6) {
+    let lookup = [];
+    for (let i = 0; i < size; i++) {
+        lookup.push(randomDouble(min, max));
+    }
+
+    let i = 0;
+    function fastRandomDouble() {
+        return i++ >= lookup.length ? lookup[i = 0] : lookup[i];
+    }
+
+    return fastRandomDouble;
 }
 
 /**
@@ -1014,9 +1299,13 @@ function clamp(x, min, max) {
     return x;
 }
 
+function randomVec3(min=0.0, max=1.0) {
+    return new Vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
+}
+
 function randomInUnitSphere() {
     while (true) {
-        let p = Vec3.prototype.random(-1.0, 1.0);
+        let p = randomVec3(-1.0, 1.0);
         if (p.lengthSquared() >= 1.0) continue;
         return p;
     } 
@@ -1104,8 +1393,7 @@ function rayColor(ray, background, world, depth) {
     }
 
     // If the ray hits nothing, return the background color.
-
-    if (!world.hitBy(ray, 0.001, Infinity, hitRecord)) {
+    if (!world.hitBy(ray, 0.001, INFINITY, hitRecord)) {
         return background;
     }
 
@@ -1115,14 +1403,19 @@ function rayColor(ray, background, world, depth) {
         return emitted;
     }
 
-    let res = emitted.plus(hitRecord.matPtr.attenuation.times(rayColor(hitRecord.matPtr.scattered, background, world, depth - 1)))
-    return res;
+    return emitted.plus(
+        hitRecord.matPtr.attenuation.times(
+            rayColor(hitRecord.matPtr.scattered, background, world, depth - 1)
+        )
+    )
+
+
 }
 
 /**
  * The main function that renders the current scene.
  */
-function main(renderPattern=null, images=null) {
+function main(renderPattern=null, images=null, currentScene=0) {
 
     const newlyRenderedPixels = [];
 
@@ -1139,11 +1432,14 @@ function main(renderPattern=null, images=null) {
     let world;
     let lookfrom, lookat;
     let fieldOfView = 20.0;
-    let aperture = 0.1;
+    let aperture = 0.0;
     let samplesPerPixel = 100;
     let background = new Color(0, 0, 0);
 
-    switch (0) {
+    let scale = 1;
+
+    // Scene selection
+    switch (currentScene) {
         case 1:
             world = randomScene();
             background = new Color(0.70, 0.80, 1.00);
@@ -1170,6 +1466,7 @@ function main(renderPattern=null, images=null) {
             background = new Color(0.70, 0.80, 1.00);
             lookfrom = new Point3D(13, 2, 3);
             lookat = new Point3D(0, 0, 0);
+            samplesPerPixel = 200;
             break;
         
         case 5:
@@ -1180,43 +1477,68 @@ function main(renderPattern=null, images=null) {
             lookat = new Point3D(0, 2, 0);
             break;
 
-        default:
         case 6:
-            world = cornellBox();
+            scale = 400 / 600;
+            world = cornellBox(scale);
             aspectRatio = 1.0;
-            imageWidth = 600;
+            imageWidth = 600*scale;
             samplesPerPixel = 200;
             background = new Color(0, 0, 0);
-            lookfrom = new Point3D(278, 278, -800);
-            lookat = new Point3D(278, 278, 0);
+            lookfrom = new Point3D(278*scale, 278*scale, -800*scale);
+            lookat = new Point3D(278*scale, 278*scale, 0);
+            fieldOfView = 40.0;
+            break;
+
+        default:
+        case 7:
+            scale = 400 / 600; // Image origionaly for 600 width image, scale it down to 400 pixel width
+            world = cornellSmoke(scale);
+            aspectRatio = 1.0;
+            imageWidth = Math.floor(600*scale);
+            samplesPerPixel = 200;
+            background = new Color(0, 0, 0);
+            lookfrom = new Point3D(278*scale, 278*scale, -800*scale);
+            lookat = new Point3D(278*scale, 278*scale, 0);
+            fieldOfView = 40.0;
+            world = new BvhNode(world, 0, 1);
+            break;
+
+        case 8:
+            scale = 0.5;
+            world = finalScene(images.earthmap, scale);
+            aspectRatio = 1.0;
+            imageWidth = 800 * scale;
+            samplesPerPixel = 100;
+            background = new Color(0, 0, 0);
+            lookfrom = new Point3D(478*scale, 278*scale, -600*scale);
+            lookat = new Point3D(278*scale, 278*scale, 0);
             fieldOfView = 40.0;
             break;
     }
 
     // Image Dimensions
-    let imageHeight = Math.round(imageWidth / aspectRatio);
+    let imageHeight = Math.floor(imageWidth / aspectRatio);
     let maxDepth = 50;
 
-    const vup = new Vec3(0, 1, 0);
+    const vup = new Vec3(0.0, 1.0, 0.0);
     const distToFocus = 10;
-    const time0 = 0;
-    const time1 = 1;
-
-    world = new BvhNode(world, time0, time1);
+    const time0 = 0.0;
+    const time1 = 1.0;
 
     // Camera
     const camera = new Camera(lookfrom, lookat, vup, fieldOfView, aspectRatio, aperture, distToFocus, time0, time1);
 
-
     // --- Render
+
+    let randomDouble = randomDoubleGen(0, 1.0);
 
     function renderPixel(x, y) {
         let pixelColor = new Color(0, 0, 0);
 
         // Take a bunch of samples around the pixel to do antialiasing
         for (let s = 0; s < samplesPerPixel; ++s) {
-            let u = (x + randomDouble(0, 1.0)) / (imageWidth - 1);
-            let v = (y + randomDouble(0, 1.0)) / (imageHeight - 1);
+            let u = (x + randomDouble()) / (imageWidth - 1);
+            let v = (y + randomDouble()) / (imageHeight - 1);
             pixelColor.plusEq(rayColor(camera.getRay(u, v), background, world, maxDepth));
         }
 
@@ -1279,8 +1601,10 @@ function main(renderPattern=null, images=null) {
 }
 
 this.onmessage = (event) => {
-    let renderPattern = event.data.renderPattern;
-    let images = event.data.images;
+    let data = event.data;
+    let renderPattern = data.renderPattern;
+    let images = data.images;
+    let currentScene = data.sceneNum ?? data.currentScene ?? 0;
 
     if (renderPattern !== undefined && renderPattern !== null) {
         let numRows = (renderPattern.numRows === undefined) ? 1 : renderPattern.numRows;
@@ -1332,12 +1656,113 @@ this.onmessage = (event) => {
         }
     }
 
-    main(renderPattern, images);
+    main(renderPattern, images, currentScene);
 }
 
 // Helper Functions
 
-function cornellBox() {
+function finalScene(earthmap, scale=1) {
+    let world = new HittableList();
+
+    let ground = new Lambertian(new Color(0.48, 0.83, 0.53));
+
+    let boxesPerSide = 20;
+
+    for (let i = 0; i < boxesPerSide; i++) {
+        for (let j = 0; j < boxesPerSide; j++) {
+            let w = (100.0);
+            let x0 = ((-1000.0) + i*w);
+            let z0 = ((-1000.0) + j*w);
+            let y0 = 0.0;
+            let x1 = (x0 + w);
+            let y1 = randomDouble(1, 101);
+            let z1 = (z0 + w);
+
+            world.add(
+                new Box(
+                    new Point3D(x0*scale, y0*scale, z0*scale),
+                    new Point3D(x1*scale, y1*scale, z1*scale),
+                    ground
+                )
+            );
+        }
+    }
+
+    let light = new DiffuseLight(new Color(7, 7, 7));
+    world.add(new XZRect(123*scale, 423*scale, 147*scale, 412*scale, 554*scale, light));
+
+    let center1 = new Point3D(400*scale, 400*scale, 200*scale);
+    let center2 = (new Vec3(30*scale,0,0)).plus(center1);
+    let moving_sphere_material = new Lambertian(new Color(0.7, 0.3, 0.1));
+    world.add(new MovingSphere(center1, center2, 0, 1*scale, 50*scale, moving_sphere_material));
+
+    world.add(new Sphere(new Point3D(260*scale, 150*scale, 45*scale), 50*scale, new Dielectric(1.5)));
+    world.add(new Sphere(
+        new Point3D(0, 150*scale, 145*scale), 50*scale, new Metal(new Color(0.8, 0.8, 0.9), 1.0)
+    ));
+
+    let boundary = new Sphere(new Point3D(360*scale,150*scale,145*scale), 70*scale, new Dielectric(1.5));
+    world.add(boundary);
+    world.add(new ConstantMedium(boundary, 0.2, new Color(0.2, 0.4, 0.9)));
+    boundary = new Sphere(new Point3D(0, 0, 0), 5000*scale, new Dielectric(1.5));
+    world.add(new ConstantMedium(boundary, .0001, new Color(1,1,1)));
+
+    let emat = new Lambertian(new ImageTexture(earthmap));
+    world.add(new Sphere(new Point3D(400*scale,200*scale,400*scale), 100*scale, emat));
+
+    let pertext = new NoiseTexture(0.1);
+    world.add(new Sphere(new Point3D(220*scale,280*scale,300*scale), 80*scale,
+            new Lambertian(pertext)));
+
+    let boxes2 = new HittableList();
+    let white = new Lambertian(new Color(0.73, 0.73, 0.73));
+    for (let j = 0; j < 1000; j++) {
+        boxes2.add(new Sphere(randomVec3(0, 165*scale), 10*scale, white));
+    }
+
+    world.add(new Translate(
+            new RotateY(new BvhNode(boxes2, 0.0, 1.0), 15),
+            new Vec3(-100*scale,270*scale,395*scale)
+        )
+    );
+
+    world = new BvhNode(world, 0, 1);
+
+    return world;
+}
+
+function cornellSmoke(scale=1) {
+    let world = new HittableList();
+
+    let red = new Lambertian(new Color(0.65, 0.05, 0.05));
+    let white = new Lambertian(new Color(0.73, 0.73, 0.73));
+    let green = new Lambertian(new Color(0.12, 0.45, 0.15));
+    let light = new DiffuseLight(new Color(7, 7, 7));
+
+    world.add(new YZRect(0, 555*scale, 0, 555*scale, 555*scale, green));
+    world.add(new YZRect(0, 555*scale, 0, 555*scale, 0, red));
+
+    world.add(new XZRect(113*scale, 443*scale, 127*scale, 432*scale, 554*scale, light));
+    world.add(new XZRect(0, 555*scale, 0, 555*scale, 0, white));
+    world.add(new XZRect(0, 555*scale, 0, 555*scale, 555*scale, white));
+
+    world.add(new XYRect(0, 555*scale, 0, 555*scale, 555*scale, white));
+
+    let box1 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 330*scale, 165*scale), white);
+    box1 = new RotateY(box1, 15); // Rotate 15 degrees
+    box1 = new Translate(box1, new Vec3(265*scale, 0, 295*scale)); // Translate it into place
+
+    let box2 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 165*scale, 165*scale), white);
+    box2 = new RotateY(box2, -18);
+    box2 = new Translate(box2, new Vec3(130*scale, 0, 65*scale));
+
+    world.add(new ConstantMedium(box1, 0.01, new Color(0, 0, 0)));
+    world.add(new ConstantMedium(box2, 0.01, new Color(0, 0, 1)));
+
+    return world;
+}
+
+function cornellBox(scale=1) {
     let world = new HittableList();
 
     let red = new Lambertian(new Color(0.65, 0.05, 0.05));
@@ -1345,14 +1770,24 @@ function cornellBox() {
     let green = new Lambertian(new Color(0.12, 0.45, 0.15));
     let light = new DiffuseLight(new Color(15, 15, 15));
 
-    world.add(new YZRect(0, 555, 0, 555, 555, green));
-    world.add(new YZRect(0, 555, 0, 555, 0, red));
+    world.add(new YZRect(0, 555*scale, 0, 555*scale, 555*scale, green));
+    world.add(new YZRect(0, 555*scale, 0, 555*scale, 0, red));
 
-    world.add(new XZRect(213, 343, 227, 332, 554, light));
-    world.add(new XZRect(0, 555, 0, 555, 0, white));
-    world.add(new XZRect(0, 555, 0, 555, 555, white));
+    world.add(new XZRect(213*scale, 343*scale, 227*scale, 332*scale, 554*scale, light));
+    world.add(new XZRect(0, 555*scale, 0, 555*scale, 0, white));
+    world.add(new XZRect(0, 555*scale, 0, 555*scale, 555*scale, white));
 
-    world.add(new XYRect(0, 555, 0, 555, 555, white));
+    world.add(new XYRect(0, 555*scale, 0, 555*scale, 555*scale, white));
+
+    let box1 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 330*scale, 165*scale), white);
+    //box1 = new RotateY(box1, 15); // Rotate 15 degrees
+    box1 = new Translate(box1, new Vec3(265*scale, 0, 295*scale)); // Translate it into place
+    world.add(box1);
+
+    let box2 = new Box(new Point3D(0, 0, 0), new Point3D(165*scale, 165*scale, 165*scale), white);
+    //box2 = new RotateY(box2, -18);
+    box2 = new Translate(box2, new Vec3(130*scale, 0, 65*scale));
+    world.add(box2);
 
     return world;
 }
@@ -1366,6 +1801,8 @@ function earthLight(earthmap) {
 
     let difflight = new DiffuseLight(new Color(5, 5, 5)); // Light is over 1, 1, 1 so that it produces enough light to light up the other objects in the scene
     world.add(new XYRect(3, 5, 1, 3, -2, difflight));
+
+    world.add(new Sphere(new Point3D(-4, 4, 4), 1, difflight));
 
     return world;
 }
@@ -1422,13 +1859,13 @@ function randomScene() {
             if (center.minus(new Point3D(4, 0.2, 0)).length() > 0.9) {
                 if (mat < 0.8) {
                     // diffuse
-                    let albedo = Vec3.prototype.random().times(Vec3.prototype.random());
+                    let albedo = randomVec3().times(randomVec3());
                     let sphereMaterial = new Lambertian(albedo);
                     let center2 = center.plus(new Vec3(0, randomDouble(0, 0.5), 0));
                     world.add(new MovingSphere(center, center2, 0.0, 1.0, 0.2, sphereMaterial));
                 } else if (mat < 0.95) {
                     // metal
-                    let albedo = Vec3.prototype.random(0.5, 1);
+                    let albedo = randomVec3(0.5, 1);
                     let fuzz = randomDouble(0, 0.5);
                     let sphereMaterial = new Metal(albedo, fuzz);
                     world.add(new Sphere(center, 0.2, sphereMaterial));
@@ -1449,6 +1886,11 @@ function randomScene() {
 
     const mat3 = new Metal(new Color(0.7, 0.6, 0.5), 0);
     world.add(new Sphere(new Point3D(4, 1, 0), 1, mat3));
+
+    // BvhNode is only worth using when there are a ton of objects like this
+    //  because if there are only a few objects then it actually takes more
+    //  more hit-tests to hit-test every object rather than less
+    world = new BvhNode(world, 0, 1);
 
     return world;
 }
@@ -1611,8 +2053,8 @@ function boxesPattern(numRows, numCols, genTemplate) {
 /**
  * Helper function that only allows you to log something using it a set number
  * of times, that way the website does not break because you tried to log something
- * 100000000000 times because this only lets you log it numTimes number of times before
- * it does not log anything else
+ * a trillion times because this only lets you log it `numTimes` number of times before
+ * it does not log anything anymore
  */
 function safeLogger(numTimes=10, logToString=false) {
     function log() {
@@ -1629,7 +2071,7 @@ function safeLogger(numTimes=10, logToString=false) {
             numTimes--;
         }
 
-        if (arguments.length === 1) {
+        if (arguments.length > 0) {
             return arguments[0];
         }
     }

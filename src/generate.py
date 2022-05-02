@@ -27,4 +27,5 @@ renderTemplate("raytracerPage1.html")
 renderTemplate("raytracerPage2.html")
 renderTemplate("raytracerPage3.html")
 renderTemplate("raytracerPage4.html")
+renderTemplate("rayTracerFinalReport.html")
 

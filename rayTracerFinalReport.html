@@ -65,7 +65,7 @@
         objects in the scene to render.
     </p>
 
-    <h4> Work </h4>
+    <h4> My Work </h4>
 
     <p>
         I have put many hours of work into this project. Initially, these hours
@@ -94,7 +94,7 @@
         every render (at least for the more complex renders).
     </p>
 
-    <h4> Learned </h4>
+    <h4> What I Learned </h4>
 
     <p>
         I learned a great deal from this project. At the beginning, I
@@ -129,6 +129,14 @@
         finished render because the renders can take a while).
     </p>
 
+    <p>
+        Note: the picture beside the 4th render is rendered with 1000 rays per pixel, but the
+        4th render is using 100 rays per pixel so that it does not take an hour
+        to render. This means that that the 4th render will look blurrier
+        and less refined than in the picture, but that is better than having to
+        wait an hour for it to finish.
+    </p>
+
     <div class="canvas-area center">
         <img src="./assets/finalReportPage-PerlinSpheres.PNG" width="400" />
         <canvas id="raytracer-out-canvas1"></canvas>
@@ -145,8 +153,19 @@
     </div>
 
     <div class="canvas-area center">
-        <img src="./assets/page4-finalScene.PNG" width="400" />
+        <img src="./assets/page4-finalScene1000raysPerPixel.PNG" width="400" />
         <canvas id="raytracer-out-canvas4"></canvas>
+    </div>
+
+    <p>
+        Here are some more renders of the 4th raytraced image using 1000 rays per pixel
+        (which took about an hour to render) and then 10,000 rays per pixel (which took
+        about 2 days to render).
+    </p>
+
+    <div class="canvas-area center">
+        <img src="./assets/page4-finalScene1000raysPerPixel.PNG" width="400" />
+        <img src="./assets/page4-finalScene10000raysPerPixel.PNG" width="400" />
     </div>
 
     <ul>
